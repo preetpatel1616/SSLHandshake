@@ -87,7 +87,7 @@ Logger *TCP::get_logger() const // returns the logger associated with the TCP ob
 
 // socket() and bind()
 
-int TCP::open_socket()
+int TCP::open_socket() // COMMON: creates a socket
 {
   // returns -1 if error
   int sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -99,7 +99,7 @@ int TCP::open_socket()
   return -1;
 }
 
-int TCP::bind_port()
+int TCP::bind_port() // SERVER: associates the socket created by "open_socket" with a specified IP and port
 {
   // returns -1 if error
   if (this->sockfd_ < 0)
@@ -133,7 +133,7 @@ int TCP::socket_listen(int num_ports) // SERVER: sets up the TCP socket to liste
   return retcode;
 }
 
-TCP *TCP::socket_accept() // SERVER: accepts an incoming connection request on the listening socket
+TCP *TCP::socket_accept() // SERVER: accepts an incoming connection request on the listening socket, and returns a new TCP object representing the connection. This method blocks until a new connection is established
 {
   int cxn_fd;
   struct sockaddr_in sock_addr;
@@ -149,27 +149,25 @@ TCP *TCP::socket_accept() // SERVER: accepts an incoming connection request on t
   return new_tcp;
 }
 
-int TCP::socket_connect(const std::string &ip_addr, int port)
+int TCP::socket_connect(const std::string &ip_addr, int port) // CLIENT: initiates a connection to a remote server specified by IP and port
 {
-  int retcode;
-  struct sockaddr_in cxn_addr;
-  struct hostent *host;
+  int retcode;                 // return code
+  struct sockaddr_in cxn_addr; // 'sockaddr_in' is a structure that holds inteernet address information
+  struct hostent *host;        // a pointer to a 'hostent' structure that will contain information about the host (server) such as the IP
 
-  memset(&cxn_addr, 0, sizeof(cxn_addr));
+  memset(&cxn_addr, 0, sizeof(cxn_addr)); // initializes the cxn_addr structure with zeroes to prevent any garbage values
 
-  cxn_addr.sin_family = AF_INET;
-  cxn_addr.sin_port = htons(port);
+  cxn_addr.sin_family = AF_INET;   // sets the address family to AF_INET, meaning that the address is IPv4
+  cxn_addr.sin_port = htons(port); //
 
   host = gethostbyname(ip_addr.c_str());
   memcpy(&cxn_addr.sin_addr, host->h_addr_list[0], host->h_length);
 
-  retcode = connect(this->sockfd_, (struct sockaddr *)&cxn_addr, sizeof(cxn_addr));
-  return retcode;
+  retcode = connect(this->sockfd_, (struct sockaddr *)&cxn_addr, sizeof(cxn_addr)); // system call that attempts to connect to the specific server using the socket file descriptor, "this->sockfd_", which would have been obtained when the socket was created with, "open_socket()"
+  return retcode; // returns the code, 0 if successful, and -1 otherwise
 }
 
-// send(), recv()
-
-ssize_t TCP::socket_send(const std::string &send_str)
+ssize_t TCP::socket_send(const std::string &send_str) // COMMON: send data over the TCP connection
 {
   size_t send_str_len = send_str.length();
   char *send_buff = (char *)malloc(send_str_len * sizeof(char));
@@ -211,7 +209,7 @@ ssize_t TCP::socket_send(const char *send_buff, size_t send_exp_len)
   return send_total_len;
 }
 
-ssize_t TCP::socket_recv(string *recv_str, size_t recv_str_len)
+ssize_t TCP::socket_recv(string *recv_str, size_t recv_str_len) // COMMON: receive data from the TCP connection
 {
   char *recv_buff = (char *)malloc(recv_str_len * sizeof(char));
   ssize_t recv_len = socket_recv(recv_buff, recv_str_len);
@@ -260,14 +258,12 @@ ssize_t TCP::socket_recv(char *i_recv_buff, size_t recv_exp_len)
   return recv_total_len;
 }
 
-int TCP::socket_close()
+int TCP::socket_close() // COMMON: closes the TCP socket, terminating the connection
 {
   int retcode;
   retcode = close(this->sockfd_);
   return retcode;
 }
-
-// hostname() and port()
 
 int TCP::get_hostname(std::string *hostname) const // retrieves the hostname associated with the TCP connection
 {
