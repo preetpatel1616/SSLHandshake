@@ -1,0 +1,16 @@
+2024-03-26 10:29:38: SslClient object created. Client Log at 20240326-102938
+2024-03-26 10:29:38: TCP:socket_connect:Attempting to connect to server 172.27.8.7:20001.
+
+2024-03-26 10:29:38: TCP:socket_connect:Successfully connected with the server.
+2024-03-26 10:29:38: SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.
+2024-03-26 10:29:38: SslClient:handshake:Sending clientHello.
+2024-03-26 10:29:38: sent:
+Hello, server!
+2024-03-26 10:29:38: SslClient:send_hello:Data sent
+2024-03-26 10:29:38: SslClient:handshake:Receiving serverHello.
+2024-03-26 10:29:38: Ssl::socket_recv_record: Failed to receive the record buffer.
+2024-03-26 10:29:38: SslClient:receive_hello: Failed to receive ServerHello message.
+2024-03-26 10:29:38: SslClient:handshake:Error in receiving serverHello.
+2024-03-26 10:29:38: SslClient::socket_connect:Failed in performing the handshake.
+2024-03-26 10:29:38: TCP:socket_close:Closing the socket.
+2024-03-26 10:29:38: TCP:socket_close:Socket closed successfully.

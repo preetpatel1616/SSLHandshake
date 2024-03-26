@@ -1,0 +1,14 @@
+2024-03-26 10:29:36: TCP:init:Initializing TCP object.
+2024-03-26 10:29:36: TCP:open_socket:Attempting to open a TCP socket.
+2024-03-26 10:29:36: TCP:open_socket:TCP socket opened successfully.
+2024-03-26 10:29:36: TCP:bind_to_port:Attempting to bind the socket to port.
+2024-03-26 10:29:36: TCP:bind_to_port: Port = 20001 SockFd = 4
+2024-03-26 10:29:36: TCP:bind_to_port:Port bound successfully on 20001
+2024-03-26 10:29:36: TCP:init:TCP object created successfully.
+2024-03-26 10:29:38: TCP:init:Initializing TCP object.
+2024-03-26 10:29:38: TCP:open_socket:Attempting to open a TCP socket.
+2024-03-26 10:29:38: TCP:open_socket:TCP socket opened successfully.
+2024-03-26 10:29:38: TCP:bind_to_port:Attempting to bind the socket to port.
+2024-03-26 10:29:38: TCP:bind_to_port: Port = 20002 SockFd = 4
+2024-03-26 10:29:38: TCP:bind_to_port:Port bound successfully on 20002
+2024-03-26 10:29:38: TCP:init:TCP object created successfully.
