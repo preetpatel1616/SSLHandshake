@@ -399,81 +399,105 @@ StatusCode SslServer::send_certificate(int client_id, SSLSharedInfo &sslSharedIn
 }
 StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession)
 {
-logger_->log("Just entered send key exchange function");
+  logger_->log("Flag 1");
   if (this->closed_)
   {
     logger_->log("SslServer:sendKeyExchange: Server is closed, cannot send Key Exchange.");
     return StatusCode::Error;
   }
-
-  if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
+  if (sslSharedInfo.chosen_cipher_suite_ == TLS_RSA_WITH_AES_128_CBC_SHA)
   {
-    DH *dh = DH_new();
-    if (dh == nullptr)
+    // For RSA, since the certificate containing the RSA public key has been sent,
+    // the server waits for the client to send an encrypted pre-master secret.
+    logger_->log("SslServer:sendKeyExchange: RSA key exchange, awaiting encrypted pre-master secret from client.");
+    return StatusCode::Success;
+  }
+
+  else if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
+  {
+    logger_->log("Flag 2");
+    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
+    EVP_PKEY *params = NULL;
+    EVP_PKEY *dhkey = NULL;
+    if (!pctx)
     {
-      logger_->log("SslServer:sendKeyExchange: Memory allocation for DH failed.");
+      logger_->log("SslServer:sendKeyExchange: Failed to create EVP_PKEY_CTX for parameters generation");
       return StatusCode::Error;
     }
 
-    // generate dhe parameters
-    //  Generate DH parameters (for simplicity, using predefined parameters)
-    //  Normally, you might generate these or load them from a secure source.
-    //  Here we just use OpenSSL functions to generate a set.
-    if (1 != DH_generate_parameters_ex(dh, 2048, DH_GENERATOR_2, NULL))
+    logger_->log("Flag 3");
+
+    // generate dh parameters
+    if (EVP_PKEY_paramgen_init(pctx) <= 0)
     {
-      logger_->log("SslServer:sendKeyExchange: Failed to generate DH parameters.");
-      DH_free(dh);
+      logger_->log("SslServer:sendKeyExchange: Failed to initialize parameter generation.");
+      return StatusCode::Error;
+    }
+    else if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx, 2048) <= 0)
+    {
+      logger_->log("SslServer:sendKeyExchange: Failed to set DH parameter generation prime length.");
+      return StatusCode::Error;
+    }
+    else if (EVP_PKEY_paramgen(pctx, &params) <= 0)
+    {
+      logger_->log("SslServer:sendKeyExchange: Failed to generate parameters.");
+return StatusCode::Error;
+    }
+
+    logger_->log("Flag 4");
+
+    // Generate dh key pair
+    EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new(params, NULL);
+    if (!kctx)
+    {
+      logger_->log("SslServer:sendKeyExchange: Failed to create EVP_PKEY_CTX for key generation");
+      EVP_PKEY_CTX_free(pctx);
+      EVP_PKEY_free(params);
       return StatusCode::Error;
     }
 
-    // Generate the public and private DH key pair
-    if (1 != DH_generate_key(dh))
+    logger_->log("Flag 4");
+
+    if (EVP_PKEY_keygen_init(kctx) <= 0 || EVP_PKEY_keygen(kctx, &dhkey) <= 0)
     {
-      logger_->log("SslServer:sendKeyExchange: Failed to generate DH key pair.");
-      DH_free(dh);
+      logger_->log("SslServer:sendKeyExchange: Failed to initialize or generate key pair");
+      EVP_PKEY_CTX_free(pctx);
+      EVP_PKEY_CTX_free(kctx);
+      if (params)
+        EVP_PKEY_free(params);
+      if (dhkey)
+        EVP_PKEY_free(dhkey);
       return StatusCode::Error;
     }
+    // Now you can access p, g, pub_key, and priv_key
+    BIGNUM *p = NULL, *g = NULL, *pub_key = NULL, *priv_key = NULL;
+    EVP_PKEY_get_bn_param(params, "p", &p);
+    EVP_PKEY_get_bn_param(params, "g", &g);
+    EVP_PKEY_get_bn_param(dhkey, "pub", &pub_key);
+    EVP_PKEY_get_bn_param(dhkey, "priv", &priv_key);
 
-    logger_->log("Before generating dh parameters");
-
-    // Get the prime 'p'
-    const BIGNUM *p = DH_get0_p(dh);
-    // Get the generator 'g'
-    const BIGNUM *g = DH_get0_g(dh);
-    // Get the public key
-    const BIGNUM *pub_key = DH_get0_pub_key(dh);
-    // Get the private key
-    const BIGNUM *priv_key = DH_get0_priv_key(dh);
-
-    logger_->log("After generating dh parameters");
-
+    logger_->log("Flag 6");
     // Since DH_get0_* does not increase the reference count, duplicating BIGNUM* for safe memory management
     sslSharedInfo.dh_p_ = BN_dup(p);
     sslSharedInfo.dh_g_ = BN_dup(g);
     sslSharedInfo.server_dh_public_key_ = BIGNUM_to_vector(BN_dup(pub_key));      // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
     sslServerSession.server_dh_private_key_ = BIGNUM_to_vector(BN_dup(priv_key)); // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
 
-    logger_->log("Before serialization of dh parameters");
-    // Serialize the DH parameters and public key
-    std::vector<uint8_t>
-        serializedData;
-    // Add the handshake message type
-    serializedData.push_back(HS_SERVER_KEY_EXCHANGE);
-
-    // Serialize p, g, and pub_key in that order
-    append_BN_to_vector(p, serializedData);
-    append_BN_to_vector(g, serializedData);
-    append_BN_to_vector(pub_key, serializedData);
-
-    logger_->log("After sereliazation of dh parameters");
-
+    // Serialize p, g, and public key
+    std::vector<uint8_t> serializedData;
+    auto p_vec = BIGNUM_to_vector(p);
+    auto g_vec = BIGNUM_to_vector(g);
+    auto pub_key_vec = BIGNUM_to_vector(pub_key);
+    serializedData.insert(serializedData.end(), p_vec.begin(), p_vec.end());
+    serializedData.insert(serializedData.end(), g_vec.begin(), g_vec.end());
+    serializedData.insert(serializedData.end(), pub_key_vec.begin(), pub_key_vec.end());
+    
     // Construct the record (simplified, adjust according to your Record structure)
     Record record;
     record.hdr.record_type = REC_HANDSHAKE;
     record.hdr.tls_version = sslSharedInfo.chosen_tls_version_;
     record.hdr.data_size = static_cast<uint16_t>(serializedData.size());
     record.data = new char[serializedData.size()];
-
     // Copy the serialized data into the record's data
     std::memcpy(record.data, serializedData.data(), serializedData.size());
 
@@ -483,23 +507,21 @@ logger_->log("Just entered send key exchange function");
     {
       logger_->log("SslServer:sendKeyExchange: Failed to send DHE key exchange.");
       delete[] record.data;
-      DH_free(dh);
+      EVP_PKEY_CTX_free(pctx);
+      EVP_PKEY_CTX_free(kctx);
+      EVP_PKEY_free(params);
+      EVP_PKEY_free(dhkey);
       return StatusCode::Error;
     }
 
     logger_->log("SslServer:sendKeyExchange: DHE key exchange sent successfully.");
     delete[] record.data; // Remember to free the allocated memory
-    DH_free(dh);          // Clean up the DH structure
+    EVP_PKEY_CTX_free(pctx);
+    EVP_PKEY_CTX_free(kctx);
+    EVP_PKEY_free(params);
+    EVP_PKEY_free(dhkey);
     return StatusCode::Success;
   }
-  else if (sslSharedInfo.chosen_cipher_suite_ == TLS_RSA_WITH_AES_128_CBC_SHA)
-  {
-    // For RSA, since the certificate containing the RSA public key has been sent,
-    // the server waits for the client to send an encrypted pre-master secret.
-    logger_->log("SslServer:sendKeyExchange: RSA key exchange, awaiting encrypted pre-master secret from client.");
-  }
-  logger_->log("SslServer:sendKeyExchange: Key exchange data sent successfully.");
-  return StatusCode::Success;
 }
 
 StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInfo)
@@ -511,19 +533,20 @@ StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInf
   }
 
   // Construct the HelloDone message. Since ServerHelloDone has no payload, we only care about the message type.
-  std::vector<uint8_t> helloDoneMessage;
-  helloDoneMessage.push_back(HS_SERVER_HELLO_DONE); // Assuming HS_SERVER_HELLO_DONE is defined as the ServerHelloDone message type
+  size_t bufferSize = sizeof(uint8_t); // Assuming HS_SERVER_HELLO_DONE is just a message type identifier
+
+  // Allocate buffer for the message
+  char *helloDoneMessage = new char[bufferSize];
+
+  // Serialize the HelloDone message type directly into the buffer
+  helloDoneMessage[0] = static_cast<char>(HS_SERVER_HELLO_DONE);
 
   // Construct the HelloDone message
   Record record;
-  record.hdr.tls_version = sslSharedInfo.chosen_tls_version_;            // Assuming TLS version has been negotiated
-  record.hdr.record_type = REC_HANDSHAKE;                                // The record type for HelloDone
-  record.hdr.data_size = static_cast<uint16_t>(helloDoneMessage.size()); // Should be 0 or the size of the message if it had a payload;                     // HelloDone has no payload
-  record.data = new char[helloDoneMessage.size()];                       // Dynamically allocate memory for the data;                       // No data for HelloDone
-
-  // Copy the HelloDone message into the record's data field
-  std::memcpy(record.data, helloDoneMessage.data(), helloDoneMessage.size());
-
+  record.hdr.tls_version = sslSharedInfo.chosen_tls_version_; // Assuming TLS version has been negotiated
+  record.hdr.record_type = REC_HANDSHAKE;                     // The record type for HelloDone
+  record.hdr.data_size = static_cast<uint16_t>(bufferSize);   // Should be 0 or the size of the message if it had a payload;                     // HelloDone has no payload
+  record.data = helloDoneMessage;                             // Dynamically allocate memory for the data;                       // No data for HelloDone
   // Send the HelloDone record
   StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)

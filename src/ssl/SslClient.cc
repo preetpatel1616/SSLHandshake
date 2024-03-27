@@ -287,6 +287,8 @@ StatusCode SslClient::receive_certificate()
 
 StatusCode SslClient::receive_key_exchange()
 {
+
+  logger_->log("Entered receive exchange function");
   // 1. Receive the record
   Record recv_record;
   StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
@@ -301,7 +303,7 @@ StatusCode SslClient::receive_key_exchange()
     logger_->log("SslClient:receiveKeyExchange: Received record is not a Key Exchange message.");
     return StatusCode::Error;
   }
-
+  logger_->log("Before checking the message type");
   uint8_t handshake_message_type = recv_record.data[0];
   if (handshake_message_type != HS_SERVER_KEY_EXCHANGE)
   {
@@ -309,6 +311,7 @@ StatusCode SslClient::receive_key_exchange()
     return StatusCode::Error;
   }
 
+logger_->log("Before checking the chosen cipher suite");
   // Check if we're using DHE_RSA_WITH_AES_128_CBC_SHA
   if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
   {
@@ -340,6 +343,7 @@ StatusCode SslClient::receive_key_exchange()
     offset += 2;
     BIGNUM *server_pub_key = BN_bin2bn(dataPtr + offset, pub_key_length, nullptr);
 
+    logger_->log("Before storing paramters");
     // Store p, g, and server's public key in sslSharedInfo
     sslSharedInfo.dh_p_ = BN_dup(p);
     sslSharedInfo.dh_g_ = BN_dup(g);

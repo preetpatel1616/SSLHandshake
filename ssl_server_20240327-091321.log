@@ -1,0 +1,12 @@
+2024-03-27 09:13:21: SslServer:constructor: SslServer object created. Server Log at 20240327-091321
+
+2024-03-27 09:13:21: SslServer:socket_listen:Starting server...
+2024-03-27 09:13:23: SslServer:socket_accept: TCP connection accepted.
+2024-03-27 09:13:23: SslServer:handshake:Receiving clientHello.
+2024-03-27 09:13:23: SslServer:receiveHello: Proceeding with DHE key exchange.
+2024-03-27 09:13:23: SslServer:sendHello: ServerHello message sent successfully.
+2024-03-27 09:13:23: SslServer:receiveHello: ClientHello message received and processed successfully.
+2024-03-27 09:13:23: SslServer:sendCertificate: Certificate sent successfully.
+2024-03-27 09:13:23: Flag 1
+2024-03-27 09:13:23: Flag 2
+2024-03-27 09:13:23: Flag 3

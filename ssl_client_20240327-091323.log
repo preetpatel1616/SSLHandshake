@@ -1,0 +1,10 @@
+2024-03-27 09:13:23: SslClient object created. Client Log at 20240327-091323
+2024-03-27 09:13:23: SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.
+2024-03-27 09:13:23: SslClient:handshake:Sending clientHello.
+2024-03-27 09:13:23: Ssl:socket_send_record:Record sent successfully.
+2024-03-27 09:13:23: SslClient:send_hello:Successfully sent ClientHello message.
+2024-03-27 09:13:23: SslClient:handshake:Receiving serverHello.
+2024-03-27 09:13:23: Ssl:socket_recv_record: Record received successfully.
+2024-03-27 09:13:23: SslClient:receive_hello: ServerHello message received successfully.
+2024-03-27 09:13:23: Ssl:socket_recv_record: Record received successfully.
+2024-03-27 09:13:23: SslClient:receiveCertificate: Certificate received and verified successfully.
