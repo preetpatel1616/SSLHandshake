@@ -29,7 +29,7 @@ SslServer::SslServer(const std::string &certificate_path, const std::string &key
   this->logger_ = new Logger(("ssl_server_" + datetime + ".log"));
   this->logger_->log("SslServer:constructor: SslServer object created. Server Log at " + datetime + "\n");
 
-  this->tcp_->logger_ = this->logger_;
+  // this->tcp_->logger_ = this->logger_;
   this->closed_ = false;
   this->client_id_ = 1;
 
@@ -107,7 +107,7 @@ bool SslServer::server_supports(uint16_t tls_version)
   return this->supported_tls_versions_.find(tls_version) != supported_tls_versions_.end();
 }
 
-StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &sslSharedInfo, TCP *clientTcp)
+StatusCode SslServer::receive_hello(int client_id, SSLSharedInfo &sslSharedInfo)
 { // Server waits to receive a clientHello message
   if (this->closed_)
   {
@@ -118,7 +118,7 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
   // 1. receive record
   Record recv_record;
 
-  StatusCode status = Ssl::socket_recv_record(&recv_record, clientTcp);
+  StatusCode status = this->socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receive_hello: Failed to receive record.");
@@ -142,7 +142,7 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
     logger_->log("SslServer:receiveHello: The received handshake record is not client hello.");
     return StatusCode::Error;
   }
-  index += sizeof(sizeof(handshake_message_type));
+  index += sizeof(handshake_message_type);
 
   // 2.1 deserialize tls version
   clientHello.tls_negotiate_version = static_cast<uint16_t>(recv_record.data[index] << 8) | (recv_record.data[index + 1]);
@@ -162,6 +162,20 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
     clientHello.cipher_suites.push_back(cipherSuite);
     index += sizeof(cipherSuite);
   }
+
+  // logger_->log("OUR VALUES\n");
+  // logger_->log("tls version: ");
+  // logger_->log(std::to_string(clientHello.tls_negotiate_version));
+  // logger_->log("client random: ");
+  // logger_->log(std::to_string(clientHello.random));
+  // logger_->log("cipher suites: ");
+  // std::string myString(clientHello.cipher_suites.begin(), clientHello.cipher_suites.end());
+  // logger_->log(myString);
+
+  // logger_->log("CORRECT VALUES\n");
+  // logger_->log("tls version: ");
+  // logger_->log(std::to_string(0x0303));
+  // logger_->log("cipher suites: ");
 
   // 3. process clientHello message
   uint16_t chosen_tls_version;
@@ -208,13 +222,13 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
   {
     // Proceed with DHE key exchange
     logger_->log("SslServer:receiveHello: Proceeding with DHE key exchange.");
-    send_hello("DHE", sslSharedInfo, client_id);
+    send_hello(client_id, "DHE", sslSharedInfo);
   }
   else if (isRsa)
   {
     // Proceed with RSA key exchange
     logger_->log("SslServer:receiveHello: Proceeding with RSA key exchange.");
-    send_hello("RSA", sslSharedInfo, client_id);
+    send_hello(client_id, "RSA", sslSharedInfo);
   }
   else
   {
@@ -227,7 +241,7 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
   recv_record.data = nullptr;
   return StatusCode::Success;
 }
-StatusCode SslServer::send_hello(const std::string key_exchange_algorithm, SSLSharedInfo &sslSharedInfo, int client_id)
+StatusCode SslServer::send_hello(int client_id, const std::string key_exchange_algorithm, SSLSharedInfo &sslSharedInfo)
 {
   if (this->closed_)
   {
@@ -252,37 +266,42 @@ StatusCode SslServer::send_hello(const std::string key_exchange_algorithm, SSLSh
     return StatusCode::Error;
   }
 
-  // 4. serialize serverHello message
-  std::vector<uint8_t> serializedServerHello; // the reason to serialize the data before putting it in record is because, in this case the data consists of lot of variables values, so to combine them
+  // Calculate buffer size
+  size_t buffer_size = 1; // For handshake message type
+  buffer_size += 2;       // For version
+  buffer_size += 4;       // For random
+  buffer_size += 2;       // For cipher suite
 
-  // 4.1 serialize handshake message type
-  serializedServerHello.push_back(HS_SERVER_HELLO);
+  // Serialize ServerHello
+  char *serializedServerHello = new char[buffer_size];
+  size_t index = 0;
 
-  // 4.2 serialize chosen tls version
-  serializedServerHello.push_back(static_cast<uint8_t>(serverHello.chosen_tls_version >> 8));
-  serializedServerHello.push_back(static_cast<uint8_t>(serverHello.chosen_tls_version & 0xFF));
+  // Handshake message type
+  serializedServerHello[index++] = HS_SERVER_HELLO;
 
-  // 4.3 serialize server random
+  // Version
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version >> 8);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version & 0xFF);
 
+  // Random
   for (int i = 3; i >= 0; --i)
   {
-    serializedServerHello.push_back((serverHello.random >> (i * 8)) & 0xFF);
+    serializedServerHello[index++] = (serverHello.random >> (i * 8)) & 0xFF;
   }
 
-  // 4.4 serialize chosen cipher suite
-  serializedServerHello.push_back(static_cast<uint8_t>(serverHello.chosen_cipher_suite >> 8));
-  serializedServerHello.push_back(static_cast<uint8_t>(serverHello.chosen_cipher_suite & 0xFF));
+  // Cipher suite
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite >> 8);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite & 0xFF);
 
   // 5. Create the ServerHello record
   Record record;
   record.hdr.record_type = REC_HANDSHAKE;                     // Handshake record
   record.hdr.tls_version = sslSharedInfo.chosen_tls_version_; // Protocol version
-  record.hdr.data_size = static_cast<uint16_t>(serializedServerHello.size());
-  record.data = new char[serializedServerHello.size()];
-  std::memcpy(record.data, serializedServerHello.data(), record.hdr.data_size);
+  record.hdr.data_size = static_cast<uint16_t>(buffer_size);
+  record.data = serializedServerHello;
 
   // send the serverhello record
-  StatusCode status = Ssl::socket_send_record(record);
+  StatusCode status = this->socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:sendHello: Failed to send ServerHello message.");
@@ -300,7 +319,7 @@ StatusCode SslServer::send_hello(const std::string key_exchange_algorithm, SSLSh
   delete[] record.data; // Free dynamically allocated memory to avoid leaks
   return StatusCode::Success;
 }
-StatusCode SslServer::send_certificate(SSLSharedInfo &sslSharedInfo)
+StatusCode SslServer::send_certificate(int client_id, SSLSharedInfo &sslSharedInfo)
 {
   if (this->closed_)
   {
@@ -365,7 +384,7 @@ StatusCode SslServer::send_certificate(SSLSharedInfo &sslSharedInfo)
   // Copy the serialized certificate into the record data
   std::memcpy(record.data, serializedData.data(), serializedData.size());
 
-  StatusCode status = Ssl::socket_send_record(record);
+  StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:sendCertificate: Failed to send certificate.");
@@ -451,7 +470,7 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
     std::memcpy(record.data, serializedData.data(), serializedData.size());
 
     // Send the record
-    StatusCode status = Ssl::socket_send_record(record);
+    StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
     if (status != StatusCode::Success)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to send DHE key exchange.");
@@ -498,7 +517,7 @@ StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInf
   std::memcpy(record.data, helloDoneMessage.data(), helloDoneMessage.size());
 
   // Send the HelloDone record
-  StatusCode status = Ssl::socket_send_record(record);
+  StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:sendHelloDone: Failed to send HelloDone message.");
@@ -510,7 +529,7 @@ StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInf
   return StatusCode::Success;
 }
 
-StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession, TCP* tcpInstance)
+StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession)
 {
   if (this->closed_)
   {
@@ -520,7 +539,7 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
 
   // Receive the key exchange record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record, tcpInstance);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receiveKeyExchange: Failed to receive key exchange data.");
@@ -625,7 +644,7 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
   return StatusCode::Success;
 }
 
-StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedInfo, TCP *tcpInstance)
+StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedInfo)
 {
   if (this->closed_)
   {
@@ -635,7 +654,7 @@ StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedIn
 
   // Receive the Finished message
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record, tcpInstance);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receiveFinished: Failed to receive Finished message.");
@@ -704,7 +723,7 @@ StatusCode SslServer::send_finished(int client_id, SSLSharedInfo &sslSharedInfo)
   std::memcpy(record.data, finishedMessage.data(), record.hdr.data_size);
 
   // Send the Finished message
-  StatusCode status = Ssl::socket_send_record(record);
+  StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:sendFinished: Failed to send Finished message.");
@@ -767,14 +786,18 @@ SslClient *SslServer::handshake(int client_id)
 
   logger_->log("SslServer:socket_accept: TCP connection accepted.");
 
-  clientTcp->logger_ = this->logger_;
+  // clientTcp->logger_ = this->logger_;
   this->client_id_ += 1;
 
   SSLSharedInfo sslSharedInfo;
   SSLServerSession sslServerSession;
+
+  sslServerSession.tcpClient = clientTcp;
+
+  client_id_to_server_session_[client_id] = sslServerSession;
   // 1. receive clientHello
   logger_->log("SslServer:handshake:Receiving clientHello.");
-  StatusCode status = this->receive_hello(client_id, sslSharedInfo, clientTcp); // waiting for clientHello message
+  StatusCode status = this->receive_hello(client_id, sslSharedInfo); // waiting for clientHello message
   if (status == StatusCode::Error)
   {
     logger_->log("SslServer:handshake:Error in receiving clientHello.");
@@ -783,7 +806,7 @@ SslClient *SslServer::handshake(int client_id)
   // 2. send serverHello. ALready called in receiveHello()
 
   // 3. send certificate
-  status = this->send_certificate(sslSharedInfo); // waiting for clientHello message
+  status = this->send_certificate(client_id, sslSharedInfo); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
   // 4. send key exchange parameters
@@ -795,7 +818,7 @@ SslClient *SslServer::handshake(int client_id)
   if (status == StatusCode::Error)
     return nullptr;
   // 6. receive client key exchange
-  status = this->receive_key_exchange(client_id, sslSharedInfo, sslServerSession, clientTcp); // waiting for clientHello message
+  status = this->receive_key_exchange(client_id, sslSharedInfo, sslServerSession); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
 
@@ -804,7 +827,7 @@ SslClient *SslServer::handshake(int client_id)
     return nullptr;
 
   // 7. receive finished message
-  status = this->receive_finished(client_id, sslSharedInfo, clientTcp); // waiting for clientHello message
+  status = this->receive_finished(client_id, sslSharedInfo); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
   // 8. send finished message

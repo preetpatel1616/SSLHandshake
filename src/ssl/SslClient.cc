@@ -26,7 +26,7 @@ SslClient::SslClient()
   }
   this->logger_ = new Logger(("ssl_client_" + datetime + ".log"));
   this->logger_->log("SslClient object created. Client Log at " + datetime);
-  this->tcp_->logger_ = this->logger_;
+  // this->tcp_->logger_ = this->logger_;
 
   // Initialize with supported versions
   supported_tls_versions.insert(TLS_1_0); // TLS 1.0
@@ -77,62 +77,77 @@ StatusCode SslClient::send_hello()
   // 1. Construct clientHello
   ClientHello clientHello;
   clientHello.tls_negotiate_version = *supported_tls_versions.rbegin();
+
   clientHello.random = generate_random_number();
   clientHello.cipher_suites = supported_cipher_suites;
 
-  // 2. Serialize clientHello
-  std::vector<uint8_t> serializedClientHello;
+  // logger_->log("client.random: ");
+  // logger_->log(std::to_string(clientHello.random));
+  // logger_->log("client_random: ");
+  // logger_->log(std::to_string(clientHello_random));
 
-  // inserting the handshake message type before inserting clientHello message
-  serializedClientHello.push_back(HS_CLIENT_HELLO);
+  // logger_->log("cipher suites: ");
+  // std::string myString(clientHello.cipher_suites.begin(), clientHello.cipher_suites.end());
+  // logger_->log(myString);
 
-  // 2.1 Serializing version
-  serializedClientHello.push_back(static_cast<uint8_t>(clientHello.tls_negotiate_version >> 8));
-  serializedClientHello.push_back(static_cast<uint8_t>(clientHello.tls_negotiate_version & 0xFF));
+  std::vector<uint16_t> supported_cipher_suites;
 
-  // 2.2 serialize random
+  // 2. Calculate buffer size
+  size_t buffer_size = 1;                              // For handshake message type
+  buffer_size += 2;                                    // For version
+  buffer_size += 4;                                    // For random
+  buffer_size += clientHello.cipher_suites.size() * 2; // For cipher suites
 
+  // 3. Serialize clientHello
+  char *serializedClientHello = new char[buffer_size];
+  size_t index = 0;
+
+  // Handshake message type
+  serializedClientHello[index++] = HS_CLIENT_HELLO;
+
+  // Version
+  serializedClientHello[index++] = static_cast<char>(clientHello.tls_negotiate_version >> 8);
+  serializedClientHello[index++] = static_cast<char>(clientHello.tls_negotiate_version & 0xFF);
+
+  // Random
   for (int i = 3; i >= 0; --i)
   {
-    serializedClientHello.push_back((clientHello.random >> (i * 8)) & 0xFF);
+    serializedClientHello[index++] = (clientHello.random >> (i * 8)) & 0xFF;
   }
 
-  // 2.3 serialize cipher suites
+  // Cipher suites
   for (const auto &cipherSuite : clientHello.cipher_suites)
   {
-    // Serialize the high byte of the cipher suite
-    serializedClientHello.push_back(static_cast<uint8_t>(cipherSuite >> 8));
-    // Serialize the low byte of the cipher suite
-    serializedClientHello.push_back(static_cast<uint8_t>(cipherSuite & 0xFF));
+    serializedClientHello[index++] = static_cast<char>(cipherSuite >> 8);
+    serializedClientHello[index++] = static_cast<char>(cipherSuite & 0xFF);
   }
 
   // 3. Create a Record
   Record record;
   record.hdr.record_type = REC_HANDSHAKE;
   record.hdr.tls_version = TLS_1_2;
-  // record.hdr.data_size = static_cast<uint16_t>(serializedClientHello.size());
-  // record.data = new char[serializedClientHello.size()]; // allocate memory for data
-  // memcpy(record.data, serializedClientHello.data(), record.hdr.data_size);
+  record.hdr.data_size = static_cast<uint16_t>(buffer_size);
+  record.data = serializedClientHello;
 
-string clientHelloData = "HI this is client hello";
+  // string clientHelloData = "HI this is client hello";
 
-char *data = (char *)malloc(clientHelloData.length() * sizeof(char));
-memcpy(data, clientHelloData.c_str(), clientHelloData.length());
-record.data = data;
+  // char *data = (char *)malloc(clientHelloData.length() * sizeof(char));
+  // memcpy(data, clientHelloData.c_str(), clientHelloData.length());
+  // record.data = data;
 
-// add length to record
-record.hdr.data_size = clientHelloData.length();
+  // // // add length to record
+  // record.hdr.data_size = clientHelloData.length();
 
-// 4. serialize the record and send it
+  // 4. serialize the record and send it
 
-StatusCode status = Ssl::socket_send_record(record);
+  StatusCode status = Ssl::socket_send_record(record, nullptr);
 
-if (status != StatusCode::Success)
-{
-  logger_->log("SslClient:send_hello:Failed to send ClientHello message.");
-  delete[] record.data; // clean up dynamically allocated memory
-  record.data = nullptr;
-  return StatusCode::Error;
+  if (status != StatusCode::Success)
+  {
+    logger_->log("SslClient:send_hello:Failed to send ClientHello message.");
+    delete[] record.data; // clean up dynamically allocated memory
+    record.data = nullptr;
+    return StatusCode::Error;
   }
   this->sslSharedInfo.client_random_ = clientHello.random;
 
@@ -430,7 +445,7 @@ StatusCode SslClient::send_key_exchange()
     std::memcpy(record.data, serialized_data.data(), record.hdr.data_size);
 
     // Send the record
-    StatusCode status = Ssl::socket_send_record(record);
+    StatusCode status = Ssl::socket_send_record(record, nullptr);
     if (status != StatusCode::Success)
     {
       logger_->log("SslClient:sendKeyExchange: Failed to send DHE Key Exchange.");
@@ -470,7 +485,7 @@ StatusCode SslClient::send_key_exchange()
     std::memcpy(record.data, serialized_data.data(), record.hdr.data_size);
 
     // Send the record
-    StatusCode status = Ssl::socket_send_record(record);
+    StatusCode status = Ssl::socket_send_record(record, nullptr);
     if (status != StatusCode::Success)
     {
       logger_->log("SslClient:sendKeyExchange: Failed to send RSA Key Exchange.");
@@ -514,7 +529,7 @@ StatusCode SslClient::send_finished()
   std::memcpy(record.data, finishedMessage.data(), record.hdr.data_size);
 
   // Send the Finished message
-  StatusCode status = socket_send_record(record);
+  StatusCode status = socket_send_record(record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SSLClient:sendFinished: Failed to send Finished message.");
@@ -733,7 +748,7 @@ StatusCode SslClient::socket_connect(const std::string &server_ip, int server_po
 
 StatusCode SslClient::socket_send_string(const std::string &send_string)
 { // sends the given string of daa over the TCP connection
-  StatusCode status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_);
+  StatusCode status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:socket_send_string:Failed in sending the message.");

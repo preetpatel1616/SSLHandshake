@@ -133,11 +133,11 @@ public:
   int get_port() const;
 
   // For sending and receiving raw string data (application data)
-  virtual StatusCode socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv);
+  virtual StatusCode socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance);
   virtual StatusCode socket_recv_string(std::string *recv_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance);
 
       // For sending and receiving SSL Records
-  virtual StatusCode socket_send_record(const Record &send_record);
+  virtual StatusCode socket_send_record(const Record &send_record, TCP* tcpInstance);
   virtual StatusCode socket_recv_record(Record *recv_record, TCP* tcpInstance);
   TCP *tcp_; // a pointer to a TCP object
 protected:

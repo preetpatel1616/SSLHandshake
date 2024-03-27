@@ -253,8 +253,10 @@ ssize_t TCP::socket_send_buffer(const char *send_buff, size_t send_exp_len)
 
   if (this->logger_ != NULL)
   {
-    this->logger_->log("sent:");
-    this->logger_->log_raw(send_buff, send_total_len);
+    this->logger_->log("Sent buffer: ");
+    this->logger_->log(send_buff);
+    this->logger_->log("Sent buffer length: ");
+    this->logger_->log(std::to_string(send_total_len));
   }
 
   return send_total_len;
@@ -280,7 +282,7 @@ ssize_t TCP::socket_send_buffer(const char *send_buff, size_t send_exp_len)
 //   return bytes_received;
 // }
 
-ssize_t TCP::socket_recv_buffer(char *i_recv_buff, size_t recv_exp_len)
+ssize_t TCP::socket_recv_buffer(char *i_recv_buff, uint16_t recv_exp_len)
 {
   size_t remain_recv_len = recv_exp_len;
   ssize_t recv_total_len = 0;
@@ -307,11 +309,10 @@ ssize_t TCP::socket_recv_buffer(char *i_recv_buff, size_t recv_exp_len)
 
   recv_total_len = recv_exp_len - remain_recv_len;
 
-  if (this->logger_ != NULL)
-  {
-    this->logger_->log("received:");
-    this->logger_->log_raw(i_recv_buff, recv_total_len);
-  }
+  this->logger_->log("received buffer: ");
+  this->logger_->log(i_recv_buff);
+  this->logger_->log("received buffer length: ");
+  this->logger_->log(std::to_string(recv_total_len));
 
   return recv_total_len;
 }

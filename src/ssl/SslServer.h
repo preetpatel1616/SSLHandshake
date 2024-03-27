@@ -23,6 +23,7 @@ public:
   {
     std::vector<uint8_t> server_dh_private_key_; // Server's DH private key
     SslClient *sslClient;
+    TCP *tcpClient;
 
     // Default constructor
     SSLServerSession()
@@ -49,13 +50,13 @@ public:
   virtual StatusCode socket_recv_string(int client_id, std::string *recv_string);
 
   // handshake methods
-  StatusCode send_hello(const std::string key_exchange_algorithm, SSLSharedInfo &sslSharedInfo, int client_id);
-  StatusCode receive_hello(int client_id, SslClient::SSLSharedInfo &sslSharedInfo, TCP *clientTcp);
-  StatusCode send_certificate(SSLSharedInfo &sslSharedInfo);
+  StatusCode send_hello(int client_id, const std::string key_exchange_algorithm, SSLSharedInfo &sslSharedInfo);
+  StatusCode receive_hello(int client_id, SSLSharedInfo &sslSharedInfo);
+  StatusCode send_certificate(int client_id, SSLSharedInfo &sslSharedInfo);
   StatusCode send_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
   StatusCode send_hello_done(int client_id, SSLSharedInfo &ssSharedInfo);
-  StatusCode receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession, TCP *tcpInstance);
-  StatusCode receive_finished(int client_id, SSLSharedInfo &sslSharedInfo, TCP *tcpInstance);
+  StatusCode receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
+  StatusCode receive_finished(int client_id, SSLSharedInfo &sslSharedInfo);
   StatusCode send_finished(int client_id, SSLSharedInfo &sslSharedInfo);
   StatusCode calculate_master_secret_and_session_keys(int client_id, SSLSharedInfo &sslSharedInfo);
   SslClient *handshake(int client_id);

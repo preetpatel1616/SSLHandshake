@@ -109,7 +109,7 @@ int Ssl::get_port() const
 // strings: send, recv
 // returns 0 on success, -1 otherwise
 
-StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv)
+StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP* tcpInstance)
 { // meant to be used after the handshake is established
 
   if (!tcp_)
@@ -152,7 +152,7 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
   send_record.data[send_record.hdr.data_size] = '\0';        // Manually add the null terminator at the end
 
   // send
-  StatusCode status = socket_send_record(send_record); // calls the 'send' function that takes a 'Record' object and sends the encrypted data
+  StatusCode status = socket_send_record(send_record, tcpInstance); // calls the 'send' function that takes a 'Record' object and sends the encrypted data
   delete[] send_record.data;                           // After sending the Record, you free the memory allocated for the data to prevent memory leaks. This is an essential step since you allocated memory dynamically for data.
 
   return status;
@@ -202,12 +202,16 @@ StatusCode Ssl::socket_recv_string(std::string *recv_string, std::vector<uint8_t
 // records: send, recv
 // returns 0 on success, -1 otherwise
 
-StatusCode Ssl::socket_send_record(const Record &send_record)
+StatusCode Ssl::socket_send_record(const Record &send_record, TCP* tcpInstance)
 {
   if (!tcp_)
   {
     logger_->log("Ssl:socket_send_record: Missing TCP connection.");
     return StatusCode::Error;
+  }
+
+  if(tcpInstance == nullptr){
+    tcpInstance = tcp_;
   }
 
   // create new char array
@@ -225,7 +229,7 @@ StatusCode Ssl::socket_send_record(const Record &send_record)
   memcpy(&(buffer[index]), send_record.data, send_record.hdr.data_size);
 
   // Send the serialized record using the underlying TCP connection
-  if (this->tcp_->socket_send_buffer(buffer, buffer_length) != buffer_length)
+  if (tcpInstance->socket_send_buffer(buffer, buffer_length) != buffer_length)
   {
     logger_->log("Ssl:socket_send_record:Failed to send the record.");
     return StatusCode::Error;
@@ -242,19 +246,24 @@ StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
     logger_->log("Ssl:socket_recv_record: Missing TCP connection.");
     return StatusCode::Error;
   }
+  if (tcpInstance == nullptr)
+  {
+    tcpInstance = tcp_;
+  }
 
   // receiving header
-  char *header = (char *)malloc(5 * sizeof(char));
+
+  char *header = (char *)malloc(5*sizeof(char));
   if (tcpInstance->socket_recv_buffer(header, 5) != 5)
   {
-    cerr << "SSL::recv: Couldn't receive header." << endl;
+    this->logger_->log("Ssl::socket_recv_record: Couldn't receive header.");
     return StatusCode::Error;
   }
-  char* record_type = header;
-  char* tls_version = &(header[1]);
-  char* data_size = &(header[1+2]);
+  char *record_type = header;
+  char *tls_version = &(header[1]);
+  char *data_size = &(header[1 + 2]);
 
-  ssize_t received_record_buffer_length;
+  uint16_t received_record_buffer_length;
   memcpy(&received_record_buffer_length, data_size, 2);
   char *received_record_buffer = (char *)malloc(received_record_buffer_length * sizeof(char));
 
@@ -263,7 +272,6 @@ StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
     logger_->log("Ssl::socket_recv_record: Failed to receive the record buffer.");
     return StatusCode::Error;
   }
-
   // Deserializing the buffer into a Record object
   memcpy(&(recv_record->hdr.record_type), record_type, 1);
   memcpy(&(recv_record->hdr.tls_version), tls_version, 2);
