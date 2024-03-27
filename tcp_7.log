@@ -1,18 +1,18 @@
-2024-03-27 04:29:57: TCP:constructor:Creating TCP object with provided socket details.
-2024-03-27 04:29:57: TCP:constructor:TCP object created successfully.
-2024-03-27 04:29:57: received buffer: 
-2024-03-27 04:29:57: 	
-2024-03-27 04:29:57: received buffer length: 
-2024-03-27 04:29:57: 5
-2024-03-27 04:29:57: received buffer: 
-2024-03-27 04:29:57: ²a„
-2024-03-27 04:29:57: received buffer length: 
-2024-03-27 04:29:57: 9
-2024-03-27 04:29:57: Sent buffer: 
-2024-03-27 04:29:57: 	
-2024-03-27 04:29:57: Sent buffer length: 
-2024-03-27 04:29:57: 14
-2024-03-27 04:29:57: Sent buffer: 
-2024-03-27 04:29:57: p0‚k0‚S CQøJô„YžXË(ôG#Š©¦ü.0	*†H†÷
-2024-03-27 04:29:57: Sent buffer length: 
-2024-03-27 04:29:57: 885
+2024-03-27 04:54:44: TCP:constructor:Creating TCP object with provided socket details.
+2024-03-27 04:54:44: TCP:constructor:TCP object created successfully.
+2024-03-27 04:54:44: received buffer: 
+2024-03-27 04:54:44: 	
+2024-03-27 04:54:44: received buffer length: 
+2024-03-27 04:54:44: 5
+2024-03-27 04:54:44: received buffer: 
+2024-03-27 04:54:44: ,uÞy
+2024-03-27 04:54:44: received buffer length: 
+2024-03-27 04:54:44: 9
+2024-03-27 04:54:44: Sent buffer: 
+2024-03-27 04:54:44: 	
+2024-03-27 04:54:44: Sent buffer length: 
+2024-03-27 04:54:44: 14
+2024-03-27 04:54:44: Sent buffer: 
+2024-03-27 04:54:44: p0‚k0‚S CQøJô„YžXË(ôG#Š©¦ü.0	*†H†÷
+2024-03-27 04:54:44: Sent buffer length: 
+2024-03-27 04:54:44: 885

@@ -399,7 +399,7 @@ StatusCode SslServer::send_certificate(int client_id, SSLSharedInfo &sslSharedIn
 }
 StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession)
 {
-
+logger_->log("Just entered send key exchange function");
   if (this->closed_)
   {
     logger_->log("SslServer:sendKeyExchange: Server is closed, cannot send Key Exchange.");
@@ -434,6 +434,8 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
       return StatusCode::Error;
     }
 
+    logger_->log("Before generating dh parameters");
+
     // Get the prime 'p'
     const BIGNUM *p = DH_get0_p(dh);
     // Get the generator 'g'
@@ -443,11 +445,15 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
     // Get the private key
     const BIGNUM *priv_key = DH_get0_priv_key(dh);
 
+    logger_->log("After generating dh parameters");
+
     // Since DH_get0_* does not increase the reference count, duplicating BIGNUM* for safe memory management
     sslSharedInfo.dh_p_ = BN_dup(p);
     sslSharedInfo.dh_g_ = BN_dup(g);
     sslSharedInfo.server_dh_public_key_ = BIGNUM_to_vector(BN_dup(pub_key));      // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
     sslServerSession.server_dh_private_key_ = BIGNUM_to_vector(BN_dup(priv_key)); // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
+
+    logger_->log("Before serialization of dh parameters");
     // Serialize the DH parameters and public key
     std::vector<uint8_t>
         serializedData;
@@ -458,6 +464,8 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
     append_BN_to_vector(p, serializedData);
     append_BN_to_vector(g, serializedData);
     append_BN_to_vector(pub_key, serializedData);
+
+    logger_->log("After sereliazation of dh parameters");
 
     // Construct the record (simplified, adjust according to your Record structure)
     Record record;

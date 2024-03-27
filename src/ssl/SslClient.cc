@@ -221,7 +221,7 @@ StatusCode SslClient::receive_certificate()
 
   // 1. receive the certificate record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
+  StatusCode status = this->socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:receiveCertificate: Failed to receive certificate.\n");
@@ -264,7 +264,7 @@ StatusCode SslClient::receive_certificate()
   this->sslSharedInfo.server_certificate_ = cert;
   // Set up the certificate store and add the trusted CAs
   X509_STORE *store = X509_STORE_new();
-  X509_STORE_load_locations(store, "tst/ca_certificates.pem", NULL);
+  X509_STORE_load_locations(store, "tst/server_certificate.pem", NULL); //self signed certificate
   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
   X509_STORE_CTX_init(ctx, store, cert, NULL);
 

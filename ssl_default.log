@@ -1,5 +1,5 @@
-2024-03-27 04:29:55: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-27 04:29:57: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-27 04:29:57: Ssl:socket_recv_record: Record received successfully.
-2024-03-27 04:29:57: Ssl:socket_send_record:Record sent successfully.
-2024-03-27 04:29:57: Ssl:socket_send_record:Record sent successfully.
+2024-03-27 04:54:42: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-27 04:54:44: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-27 04:54:44: Ssl:socket_recv_record: Record received successfully.
+2024-03-27 04:54:44: Ssl:socket_send_record:Record sent successfully.
+2024-03-27 04:54:44: Ssl:socket_send_record:Record sent successfully.
