@@ -54,8 +54,8 @@ public:
   StatusCode send_certificate(SSLSharedInfo &sslSharedInfo);
   StatusCode send_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
   StatusCode send_hello_done(int client_id, SSLSharedInfo &ssSharedInfo);
-  StatusCode receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
-  StatusCode receive_finished(int client_id, SSLSharedInfo &sslSharedInfo);
+  StatusCode receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession, TCP *tcpInstance);
+  StatusCode receive_finished(int client_id, SSLSharedInfo &sslSharedInfo, TCP *tcpInstance);
   StatusCode send_finished(int client_id, SSLSharedInfo &sslSharedInfo);
   StatusCode calculate_master_secret_and_session_keys(int client_id, SSLSharedInfo &sslSharedInfo);
   SslClient *handshake(int client_id);

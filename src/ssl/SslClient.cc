@@ -110,40 +110,43 @@ StatusCode SslClient::send_hello()
   Record record;
   record.hdr.record_type = REC_HANDSHAKE;
   record.hdr.tls_version = TLS_1_2;
-  record.hdr.data_size = static_cast<uint16_t>(serializedClientHello.size());
-  record.data = new char[serializedClientHello.size()]; // allocate memory for data
-  memcpy(record.data, serializedClientHello.data(), record.hdr.data_size);
+  // record.hdr.data_size = static_cast<uint16_t>(serializedClientHello.size());
+  // record.data = new char[serializedClientHello.size()]; // allocate memory for data
+  // memcpy(record.data, serializedClientHello.data(), record.hdr.data_size);
 
-  // 4. serialize the record and send it
-  
-  // StatusCode status = Ssl::socket_send_record(record);
-  const char *sendBuffer = "Hello, server!";
-  ssize_t bytes_sent = this->tcp_->socket_send_buffer(sendBuffer, strlen(sendBuffer));
-  if(bytes_sent > 0){
-    logger_->log("SslClient:send_hello:Data sent");
-    return StatusCode::Success;
+string clientHelloData = "HI this is client hello";
+
+char *data = (char *)malloc(clientHelloData.length() * sizeof(char));
+memcpy(data, clientHelloData.c_str(), clientHelloData.length());
+record.data = data;
+
+// add length to record
+record.hdr.data_size = clientHelloData.length();
+
+// 4. serialize the record and send it
+
+StatusCode status = Ssl::socket_send_record(record);
+
+if (status != StatusCode::Success)
+{
+  logger_->log("SslClient:send_hello:Failed to send ClientHello message.");
+  delete[] record.data; // clean up dynamically allocated memory
+  record.data = nullptr;
+  return StatusCode::Error;
   }
+  this->sslSharedInfo.client_random_ = clientHello.random;
 
-  // if (status != StatusCode::Success)
-  // {
-  //   logger_->log("SslClient:send_hello:Failed to send ClientHello message.");
-  //   delete[] record.data; // clean up dynamically allocated memory
-  //   record.data = nullptr;
-  //   return StatusCode::Error;
-  // }
-  // this->sslSharedInfo.client_random_ = clientHello.random;
-
-  // logger_->log("SslClient:send_hello:Successfully sent ClientHello message.");
-  // delete[] record.data;
-  // record.data = nullptr;
-  // return StatusCode::Success;
+  logger_->log("SslClient:send_hello:Successfully sent ClientHello message.");
+  delete[] record.data;
+  record.data = nullptr;
+  return StatusCode::Success;
 }
 
 StatusCode SslClient::receive_hello()
 {
   // 1. Receive the record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:receive_hello: Failed to receive ServerHello message.");
@@ -203,7 +206,7 @@ StatusCode SslClient::receive_certificate()
 
   // 1. receive the certificate record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:receiveCertificate: Failed to receive certificate.\n");
@@ -271,7 +274,7 @@ StatusCode SslClient::receive_key_exchange()
 {
   // 1. Receive the record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:receiveKeyExchange: Failed to receive Key Exchange data.");
@@ -378,7 +381,7 @@ StatusCode SslClient::receive_hello_done()
 {
   // Receive the HelloDone record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:receiveHelloDone: Failed to receive HelloDone message.");
@@ -528,7 +531,7 @@ StatusCode SslClient::receive_finished()
 {
   // 1. Receive the record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SSLClient:receiveFinished: Failed to receive Finished message.");
@@ -743,7 +746,7 @@ StatusCode SslClient::socket_send_string(const std::string &send_string)
 }
 StatusCode SslClient::socket_recv_string(std::string *recv_string) // sends the given string of daa over the TCP connection
 {
-  StatusCode status = Ssl::socket_recv_string(recv_string, sslSharedInfo.server_write_key_, sslSharedInfo.server_write_Iv_);
+  StatusCode status = Ssl::socket_recv_string(recv_string, sslSharedInfo.server_write_key_, sslSharedInfo.server_write_Iv_, nullptr);
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:socket_send:Failed in sending the message.");

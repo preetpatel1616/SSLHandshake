@@ -74,20 +74,20 @@ ssize_t TcpClient::socket_send_string(const std::string &send_string)
   return send_string_length;
 }
 
-ssize_t TcpClient::socket_recv_string(std::string *recv_string) // sends the given string of daa over the TCP connection
-{
-  ssize_t received_string_length = TCP::socket_recv_string(recv_string);
-  if (received_string_length < 0)
-  {
-    logger_->log("TcpClient:socket_recv_string:Receive failed.");
-    return -1;
-  }
-  else
-  {
-    logger_->log("TcpClient:socket_recv_string:TcpClient received data successfully.\n");
-  }
-  return received_string_length;
-}
+// ssize_t TcpClient::socket_recv_string(std::string *recv_string) // sends the given string of daa over the TCP connection
+// {
+//   ssize_t received_string_length = TCP::socket_recv_string(recv_string);
+//   if (received_string_length < 0)
+//   {
+//     logger_->log("TcpClient:socket_recv_string:Receive failed.");
+//     return -1;
+//   }
+//   else
+//   {
+//     logger_->log("TcpClient:socket_recv_string:TcpClient received data successfully.\n");
+//   }
+//   return received_string_length;
+// }
 
 StatusCode TcpClient::socket_close()
 {

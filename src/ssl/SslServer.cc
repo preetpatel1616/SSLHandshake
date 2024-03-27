@@ -118,16 +118,10 @@ StatusCode SslServer::receive_hello(int client_id, SslClient::SSLSharedInfo &ssl
   // 1. receive record
   Record recv_record;
 
-  char *buffer = (char *)malloc(10 * sizeof(char));
-  ssize_t bytesReceived = clientTcp->socket_recv_buffer(buffer, 10);
-  std::string received_string = std::string(buffer);
-  logger_->log("SslServer:receive_hello: Received string: " + received_string);
-  return StatusCode::Success;
-
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, clientTcp);
   if (status != StatusCode::Success)
   {
-    logger_->log("SslServer:receiveHello: Failed to receive record.");
+    logger_->log("SslServer:receive_hello: Failed to receive record.");
     return StatusCode::Error;
   }
 
@@ -516,7 +510,7 @@ StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInf
   return StatusCode::Success;
 }
 
-StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession)
+StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession, TCP* tcpInstance)
 {
   if (this->closed_)
   {
@@ -526,7 +520,7 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
 
   // Receive the key exchange record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, tcpInstance);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receiveKeyExchange: Failed to receive key exchange data.");
@@ -631,7 +625,7 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
   return StatusCode::Success;
 }
 
-StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedInfo)
+StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedInfo, TCP *tcpInstance)
 {
   if (this->closed_)
   {
@@ -641,7 +635,7 @@ StatusCode SslServer::receive_finished(int client_id, SSLSharedInfo &sslSharedIn
 
   // Receive the Finished message
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record);
+  StatusCode status = Ssl::socket_recv_record(&recv_record, tcpInstance);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receiveFinished: Failed to receive Finished message.");
@@ -801,7 +795,7 @@ SslClient *SslServer::handshake(int client_id)
   if (status == StatusCode::Error)
     return nullptr;
   // 6. receive client key exchange
-  status = this->receive_key_exchange(client_id, sslSharedInfo, sslServerSession); // waiting for clientHello message
+  status = this->receive_key_exchange(client_id, sslSharedInfo, sslServerSession, clientTcp); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
 
@@ -810,7 +804,7 @@ SslClient *SslServer::handshake(int client_id)
     return nullptr;
 
   // 7. receive finished message
-  status = this->receive_finished(client_id, sslSharedInfo); // waiting for clientHello message
+  status = this->receive_finished(client_id, sslSharedInfo, clientTcp); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
   // 8. send finished message

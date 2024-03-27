@@ -228,18 +228,18 @@ ssize_t TCP::socket_send_string(const std::string &send_string) // COMMON: send 
   return send_string_length;
 }
 
-ssize_t TCP::socket_send_buffer(const char *send_buffer, size_t total_send_buffer_length)
+ssize_t TCP::socket_send_buffer(const char *send_buff, size_t send_exp_len)
 {
-  size_t remain_send_len = total_send_buffer_length;
+  size_t remain_send_len = send_exp_len;
   ssize_t send_total_len = 0;
   ssize_t send_len;
-  const long unsigned int max_chunk_size = MAX_BUFFER_CHUNK_SIZE; // Assuming MAX_BUFFER_CHUNK_SIZE is defined somewhere
+  const long unsigned int max_chunk_size = 1024;
   int send_flags = 0;
 
   while (remain_send_len > 0)
   {
-    const char *chunk_start = send_buffer + (total_send_buffer_length - remain_send_len);
-    send_len = remain_send_len > max_chunk_size ? max_chunk_size : remain_send_len;
+    const char *chunk_start = &(send_buff[send_exp_len - remain_send_len]);
+    send_len = remain_send_len > max_chunk_size ? max_chunk_size - 1 : remain_send_len;
     send_len = send(this->sockfd_, chunk_start, send_len, send_flags);
     if (send_len == -1)
     {
@@ -247,62 +247,70 @@ ssize_t TCP::socket_send_buffer(const char *send_buffer, size_t total_send_buffe
       return -1;
     }
     remain_send_len -= send_len;
-    send_total_len += send_len;
   }
+
+  send_total_len = send_exp_len - remain_send_len;
 
   if (this->logger_ != NULL)
   {
     this->logger_->log("sent:");
-    this->logger_->log_raw(send_buffer, send_total_len);
+    this->logger_->log_raw(send_buff, send_total_len);
   }
 
   return send_total_len;
 }
 
-ssize_t TCP::socket_recv_string(std::string *recv_string) // COMMON: receive data from the TCP connection
-{
-  // In this function, the received string data is stored in the buffer array that is dynamically allocated at the beginning of the function. After receiving the data from the network into this buffer, it's then converted to a std::string object and assigned to the recv_string parameter, which is a pointer to a std::string object provided by the caller of the function.
-  if (!recv_string)
-  {
-    logger_->log("TCP::socket_recv_string: Invalid string pointer.");
-    return -1;
-  }
+// ssize_t TCP::socket_recv_string(std::string *recv_string) // COMMON: receive data from the TCP connection
+// {
+//   // In this function, the received string data is stored in the buffer array that is dynamically allocated at the beginning of the function. After receiving the data from the network into this buffer, it's then converted to a std::string object and assigned to the recv_string parameter, which is a pointer to a std::string object provided by the caller of the function.
+//   if (!recv_string)
+//   {
+//     logger_->log("TCP::socket_recv_string: Invalid string pointer.");
+//     return -1;
+//   }
 
-  // allocate a buffer to hold the received data
-  char *buffer = (char *)malloc(5 * sizeof(char));
-  ssize_t bytes_received = socket_recv_buffer(buffer, 5);
+//   // allocate a buffer to hold the received data
+//   std::vector<char> buffer; // Create a vector to hold the received data
+//   ssize_t bytes_received = socket_recv_buffer(buffer);
 
-  std::string received_string = std::string(buffer);
+//   // Convert the buffer to a std::string
+//   std::string receivedString(buffer.begin(), buffer.end());
 
-  logger_->log("TCP::socket_recv_string: Received data successfully.");
-  return bytes_received;
-}
+//   logger_->log("TCP::socket_recv_string: Received data successfully.");
+//   return bytes_received;
+// }
 
-ssize_t TCP::socket_recv_buffer(char *recv_buffer, size_t recv_exp_len)
+ssize_t TCP::socket_recv_buffer(char *i_recv_buff, size_t recv_exp_len)
 {
   size_t remain_recv_len = recv_exp_len;
   ssize_t recv_total_len = 0;
-  ssize_t recv_len;
-  const long unsigned int max_chunk_size = MAX_BUFFER_CHUNK_SIZE; // Assuming MAX_BUFFER_CHUNK_SIZE is defined somewhere
+  ssize_t recv_len = 0;
+  const long unsigned int max_chunk_size = 1024;
+  char recv_buff[max_chunk_size];
   int recv_flags = 0;
+  int index = 0;
 
   while (remain_recv_len > 0)
   {
-    recv_len = remain_recv_len > max_chunk_size ? max_chunk_size : remain_recv_len;
-    recv_len = recv(this->sockfd_, recv_buffer + (recv_exp_len - remain_recv_len), recv_len, recv_flags);
+    memset(recv_buff, 0, max_chunk_size);
+    recv_len = remain_recv_len > max_chunk_size ? max_chunk_size - 1 : remain_recv_len;
+    recv_len = recv(this->sockfd_, recv_buff, recv_len, recv_flags);
     if (recv_len == -1)
     {
       perror("error when receiving");
       return -1;
     }
+    index = recv_exp_len - remain_recv_len;
+    memcpy(&(i_recv_buff[index]), recv_buff, recv_len);
     remain_recv_len -= recv_len;
-    recv_total_len += recv_len;
   }
+
+  recv_total_len = recv_exp_len - remain_recv_len;
 
   if (this->logger_ != NULL)
   {
     this->logger_->log("received:");
-    this->logger_->log_raw(recv_buffer, recv_total_len);
+    this->logger_->log_raw(i_recv_buff, recv_total_len);
   }
 
   return recv_total_len;

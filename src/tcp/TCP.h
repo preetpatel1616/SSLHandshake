@@ -27,8 +27,8 @@ public:
   // COMMON MEthODS USED BY BOTH, CLIENT and SERVER
   virtual ssize_t socket_send_string(const std::string &send_string); // COMMON: send data over the TCP connection
   ssize_t socket_send_buffer(const char *send_buffer, size_t total_send_buffer_length);
-  virtual ssize_t socket_recv_string(std::string *recv_string); // COMMON: receive data from the TCP connection
-  ssize_t socket_recv_buffer(char *recv_buffer, size_t recv_exp_len);
+  // virtual ssize_t socket_recv_string(std::string *recv_string); // COMMON: receive data from the TCP connection
+  ssize_t socket_recv_buffer(char *i_recv_buff, size_t recv_exp_len);
 
   int get_hostname(std::string *hostname) const; // retreives the hostname associated with the TCP connection
   StatusCode get_port(int *port) const;          // gets the port number on which the TCP socket is listening or connected
