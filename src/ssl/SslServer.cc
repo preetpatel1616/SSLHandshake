@@ -149,51 +149,48 @@ StatusCode SslServer::receive_hello(int client_id, SSLSharedInfo &sslSharedInfo)
   index += sizeof(handshake_message_type);
 
   // 2.1 deserialize tls version
-  clientHello.tls_negotiate_version = static_cast<uint16_t>(recv_record.data[index] << 8) | (recv_record.data[index + 1]);
-  index += sizeof(clientHello.tls_negotiate_version);
+  clientHello.tls_negotiate_version_ = static_cast<uint16_t>(recv_record.data[index] << 8) | (recv_record.data[index + 1]);
+  index += sizeof(clientHello.tls_negotiate_version_);
   // 2.2 deserialize random
-  clientHello.random = 0;
+  clientHello.random_ = 0;
   for (int i = 0; i < 4; ++i)
   { // Assuming random is 4 bytes
-    clientHello.random = static_cast<uint32_t>(recv_record.data[index] << 8) | (recv_record.data[index + i]);
+    clientHello.random_ = static_cast<uint32_t>(recv_record.data[index] << 8) | (recv_record.data[index + i]);
   }
-  index += sizeof(clientHello.random);
+  index += sizeof(clientHello.random_);
 
   // 2.3 deserialize ciphersuites
   while (index + 1 < recv_record.hdr.data_size)
   {
     uint16_t cipherSuite = static_cast<uint16_t>(recv_record.data[index] << 8) | recv_record.data[index + 1];
-    clientHello.cipher_suites.push_back(cipherSuite);
+    clientHello.cipher_suites_.push_back(cipherSuite);
     index += sizeof(cipherSuite);
   }
 
-  // logger_->log("OUR VALUES\n");
-  // logger_->log("tls version: ");
-  // logger_->log(std::to_string(clientHello.tls_negotiate_version));
-  // logger_->log("client random: ");
-  // logger_->log(std::to_string(clientHello.random));
-  // logger_->log("cipher suites: ");
-  // std::string myString(clientHello.cipher_suites.begin(), clientHello.cipher_suites.end());
+  // logger_->log("SslServer:receive_hello: ClientHello Data\n");
+  // logger_->log("\nSslServer:receive_hello: Supported tls version: ");
+  // logger_->log(std::to_string(clientHello.tls_negotiate_version_));
+  // logger_->log("SslServer:receive_hello: TLS 1_2: ");
+  // logger_->log(std::to_string(TLS_1_2));
+  // logger_->log("SslServer:receive_hello: Client random: ");
+  // logger_->log(std::to_string(clientHello.random_));
+  // logger_->log("SslServer:receive_hello: Supported cipher suites: ");
+  // std::string myString(clientHello.cipher_suites_.begin(), clientHello.cipher_suites_.end());
   // logger_->log(myString);
-
-  // logger_->log("CORRECT VALUES\n");
-  // logger_->log("tls version: ");
-  // logger_->log(std::to_string(0x0303));
-  // logger_->log("cipher suites: ");
 
   // 3. process clientHello message
   uint16_t chosen_tls_version;
 
   // 3.1 process tls version
-  if (clientHello.tls_negotiate_version >= TLS_1_2 && server_supports(TLS_1_2))
+  if (clientHello.tls_negotiate_version_ >= TLS_1_2 && server_supports(TLS_1_2))
   {
     chosen_tls_version = TLS_1_2;
   }
-  else if (clientHello.tls_negotiate_version >= TLS_1_1 && server_supports(TLS_1_1))
+  else if (clientHello.tls_negotiate_version_ >= TLS_1_1 && server_supports(TLS_1_1))
   {
     chosen_tls_version = TLS_1_1;
   }
-  else if (clientHello.tls_negotiate_version >= TLS_1_0 && server_supports(TLS_1_0))
+  else if (clientHello.tls_negotiate_version_ >= TLS_1_0 && server_supports(TLS_1_0))
   {
     chosen_tls_version = TLS_1_0;
   }
@@ -208,11 +205,11 @@ StatusCode SslServer::receive_hello(int client_id, SSLSharedInfo &sslSharedInfo)
   bool isDhe = false;
   bool isRsa = false;
 
-  if (clientHello.cipher_suites[0] == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
+  if (clientHello.cipher_suites_[0] == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
   {
     isDhe = true;
   }
-  else if (clientHello.cipher_suites[0] == TLS_RSA_WITH_AES_128_CBC_SHA)
+  else if (clientHello.cipher_suites_[0] == TLS_RSA_WITH_AES_128_CBC_SHA)
   {
     isRsa = true;
   }
@@ -220,7 +217,7 @@ StatusCode SslServer::receive_hello(int client_id, SSLSharedInfo &sslSharedInfo)
   // assigning values to sslSharedInfo
 
   sslSharedInfo.chosen_tls_version_ = chosen_tls_version;
-  sslSharedInfo.client_random_ = clientHello.random;
+  sslSharedInfo.client_random_ = clientHello.random_;
 
   if (isDhe)
   {
@@ -254,21 +251,31 @@ StatusCode SslServer::send_hello(int client_id, const std::string key_exchange_a
   }
   // Construct ServerHello
   ServerHello serverHello;
-  serverHello.chosen_tls_version = sslSharedInfo.chosen_tls_version_;
-  serverHello.random = generate_random_number(); // Implement this function to generate a random number
+  serverHello.chosen_tls_version_ = sslSharedInfo.chosen_tls_version_;
+  serverHello.random_ = generate_random_number(); // Implement this function to generate a random number
   if (key_exchange_algorithm == "DHE")
   {
-    serverHello.chosen_cipher_suite = TLS_DHE_RSA_WITH_AES_128_CBC_SHA;
+    serverHello.chosen_cipher_suite_ = TLS_DHE_RSA_WITH_AES_128_CBC_SHA;
   }
   else if (key_exchange_algorithm == "RSA")
   {
-    serverHello.chosen_cipher_suite = TLS_RSA_WITH_AES_128_CBC_SHA;
+    serverHello.chosen_cipher_suite_ = TLS_RSA_WITH_AES_128_CBC_SHA;
   }
   else
   {
     logger_->log("SslServer:sendHello: No compatible cipher suite found.");
     return StatusCode::Error;
   }
+
+  // logger_->log("SslServer:send_hello: ServerHello Data\n");
+  // logger_->log("\nSslServer:send_hello: Chosen tls version: ");
+  // logger_->log(std::to_string(serverHello.chosen_tls_version_));
+  // logger_->log("SslServer:send_hello: TLS 1_2: ");
+  // logger_->log(std::to_string(TLS_1_2));
+  // logger_->log("SslServer:send_hello: Server random: ");
+  // logger_->log(std::to_string(serverHello.random_));
+  // logger_->log("SslServer:send_hello: Chosen cipher suites: ");
+  // logger_->log(std::to_string(serverHello.chosen_cipher_suite_));
 
   // Calculate buffer size
   size_t buffer_size = 1; // For handshake message type
@@ -284,18 +291,18 @@ StatusCode SslServer::send_hello(int client_id, const std::string key_exchange_a
   serializedServerHello[index++] = HS_SERVER_HELLO;
 
   // Version
-  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version >> 8);
-  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version & 0xFF);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version_ >> 8);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_tls_version_ & 0xFF);
 
   // Random
   for (int i = 3; i >= 0; --i)
   {
-    serializedServerHello[index++] = (serverHello.random >> (i * 8)) & 0xFF;
+    serializedServerHello[index++] = (serverHello.random_ >> (i * 8)) & 0xFF;
   }
 
   // Cipher suite
-  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite >> 8);
-  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite & 0xFF);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite_ >> 8);
+  serializedServerHello[index++] = static_cast<char>(serverHello.chosen_cipher_suite_ & 0xFF);
 
   // 5. Create the ServerHello record
   Record record;
@@ -314,10 +321,8 @@ StatusCode SslServer::send_hello(int client_id, const std::string key_exchange_a
     return StatusCode::Error;
   }
 
-  sslSharedInfo.chosen_cipher_suite_ = serverHello.chosen_cipher_suite;
-  sslSharedInfo.server_random_ = serverHello.random;
-
-  // add_client_session(client_id, chosen_tls_version, serverHello.chosen_cipher_suite, client_random);
+  sslSharedInfo.chosen_cipher_suite_ = serverHello.chosen_cipher_suite_;
+  sslSharedInfo.server_random_ = serverHello.random_;
 
   logger_->log("SslServer:sendHello: ServerHello message sent successfully.");
   delete[] record.data; // Free dynamically allocated memory to avoid leaks
@@ -403,7 +408,6 @@ StatusCode SslServer::send_certificate(int client_id, SSLSharedInfo &sslSharedIn
 }
 StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession)
 {
-  logger_->log("Flag 1");
   if (this->closed_)
   {
     logger_->log("SslServer:sendKeyExchange: Server is closed, cannot send Key Exchange.");
@@ -419,15 +423,12 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
 
   else if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
   {
-    logger_->log("Flag 2");
     auto pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
     if (!pctx)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to create EVP_PKEY_CTX for parameters generation");
       return StatusCode::Error;
     }
-
-    logger_->log("Flag 3");
 
     // generate dh parameters
     if (EVP_PKEY_paramgen_init(pctx) <= 0)
@@ -436,14 +437,14 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
       EVP_PKEY_CTX_free(pctx);
       return StatusCode::Error;
     }
-    logger_->log("Flag 4");
+
     if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx, 512) <= 0)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to set DH parameter generation prime length.");
       EVP_PKEY_CTX_free(pctx);
       return StatusCode::Error;
     }
-    logger_->log("Flag 5");
+
     EVP_PKEY *params = NULL;
 
     if (EVP_PKEY_paramgen(pctx, &params) <= 0)
@@ -452,11 +453,6 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
       EVP_PKEY_CTX_free(pctx);
       return StatusCode::Error;
     }
-    logger_->log("Flag 6");
-
-    EVP_PKEY_CTX_free(pctx); // Param generation context no longer needed
-
-    logger_->log("Flag 7");
 
     // Generate dh key pair
     auto kctx = EVP_PKEY_CTX_new(params, NULL);
@@ -466,8 +462,6 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
       EVP_PKEY_free(params);
       return StatusCode::Error;
     }
-
-    logger_->log("Flag 8");
 
     if (EVP_PKEY_keygen_init(kctx) <= 0)
     {
@@ -495,35 +489,44 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
     EVP_PKEY_get_bn_param(dhkey, "pub", &pub_key);
     EVP_PKEY_get_bn_param(dhkey, "priv", &priv_key);
 
-    logger_->log("Flag 9");
     // Since DH_get0_* does not increase the reference count, duplicating BIGNUM* for safe memory management
     sslSharedInfo.dh_p_ = BN_dup(p);
     sslSharedInfo.dh_g_ = BN_dup(g);
     sslSharedInfo.server_dh_public_key_ = BIGNUM_to_vector(BN_dup(pub_key));      // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
     sslServerSession.server_dh_private_key_ = BIGNUM_to_vector(BN_dup(priv_key)); // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
 
-    logger_->log("Flag 10");
+
     // Serialize p, g, and public key
     std::vector<uint8_t> serializedData;
-    auto p_vec = BIGNUM_to_vector(p);
-    auto g_vec = BIGNUM_to_vector(g);
-    auto pub_key_vec = BIGNUM_to_vector(pub_key);
-    serializedData.insert(serializedData.end(), p_vec.begin(), p_vec.end());
-    serializedData.insert(serializedData.end(), g_vec.begin(), g_vec.end());
-    serializedData.insert(serializedData.end(), pub_key_vec.begin(), pub_key_vec.end());
+    serializedData.push_back(HS_SERVER_KEY_EXCHANGE);
+    auto p_vec = BIGNUM_to_vector(sslSharedInfo.dh_p_);
+    auto g_vec = BIGNUM_to_vector(sslSharedInfo.dh_g_);
+    auto pub_key_vec = BIGNUM_to_vector(BN_dup(pub_key));
+
+    //prepend length and append data for p,g and servers public key
+    prependLength(serializedData, p_vec);
+    prependLength(serializedData, g_vec);
+    prependLength(serializedData, pub_key_vec);
+
+    // // Logging for debugging purposes
+    // logger_->log("p: " + toHexString(p_vec));
+    // logger_->log("g: " + toHexString(g_vec));
+    // logger_->log("server public key: " + toHexString(pub_key_vec));
 
     // Construct the record (simplified, adjust according to your Record structure)
     Record record;
     record.hdr.record_type = REC_HANDSHAKE;
     record.hdr.tls_version = sslSharedInfo.chosen_tls_version_;
     record.hdr.data_size = static_cast<uint16_t>(serializedData.size());
-    record.data = new char[serializedData.size()];
+    record.data = new char[record.hdr.data_size];
     // Copy the serialized data into the record's data
     std::memcpy(record.data, serializedData.data(), serializedData.size());
 
-    logger_->log("Flag 11");
+    logger_->log("SslServer:sendKeyExchange: Before sending the record");
+
     // Send the record
-    StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
+    StatusCode status = this->socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
+    logger_->log("Just after sending the record: " + std::to_string(bool(status)));
     if (status != StatusCode::Success)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to send DHE key exchange.");
@@ -537,10 +540,11 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
 
     logger_->log("SslServer:sendKeyExchange: DHE key exchange sent successfully.");
     delete[] record.data; // Remember to free the allocated memory
-    EVP_PKEY_CTX_free(pctx);
-    EVP_PKEY_CTX_free(kctx);
-    EVP_PKEY_free(params);
-    EVP_PKEY_free(dhkey);
+    // EVP_PKEY_CTX_free(pctx);
+    // EVP_PKEY_CTX_free(kctx);
+    // EVP_PKEY_free(params);
+    // EVP_PKEY_free(dhkey);
+    logger_->log("About to return success in send key exchange");
     return StatusCode::Success;
   }
 }
@@ -592,7 +596,7 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
 
   // Receive the key exchange record
   Record recv_record;
-  StatusCode status = Ssl::socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
+  StatusCode status = this->socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:receiveKeyExchange: Failed to receive key exchange data.");
@@ -614,43 +618,55 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
 
   if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
   {
-    // Use the server's DH parameters and private key from sslServerSession
-    DH *dh_ = DH_new();
-    BIGNUM *p = sslSharedInfo.dh_p_;
-    BIGNUM *g = sslSharedInfo.dh_g_;
-    DH_set0_pqg(dh_, p, NULL, g);
-    DH_set0_key(dh_, NULL, BN_bin2bn(&sslServerSession.server_dh_private_key_[0], sslServerSession.server_dh_private_key_.size(), NULL));
-
-    // Deserialize the client's public DH key from the received record
-    const char *clientPubKeyPtr = reinterpret_cast<const char *>(recv_record.data + 1); // Skip the message type byte
-    int clientPubKeyLen = recv_record.hdr.data_size - 1;                                // Adjust length for the actual key data
-    BIGNUM *clientPubKey = BN_bin2bn(reinterpret_cast<const unsigned char *>(clientPubKeyPtr), clientPubKeyLen, NULL);
-
-    if (!clientPubKey)
+    EVP_PKEY *server_params = BIGNUMs_to_EVP_PKEY_DH(sslSharedInfo.dh_p_, sslSharedInfo.dh_g_, NULL);
+    if (!server_params)
     {
-      DH_free(dh_);
-      logger_->log("SslServer:receiveKeyExchange: Failed to deserialize client's DH public key.");
+      logger_->log("Failed to create DH EVP_PKEY.");
+      return StatusCode::Error;
+    }
+
+    // Extract the client's public key
+    const unsigned char *clientPubKeyPtr = reinterpret_cast<const unsigned char*>(recv_record.data + 1); // Skip the message type byte
+    size_t clientPubKeyLen = recv_record.hdr.data_size - 1;
+    EVP_PKEY *client_pub_key = EVP_PKEY_new_raw_public_key(EVP_PKEY_DH, nullptr, clientPubKeyPtr, clientPubKeyLen);
+    if (!client_pub_key)
+    {
+      EVP_PKEY_free(server_params);
+      logger_->log("Failed to extract client's public DH key.");
       return StatusCode::Error;
     }
 
     // Compute the shared secret
-    std::vector<unsigned char> sharedSecret(DH_size(dh_));
-    int sharedSecretSize = DH_compute_key(&sharedSecret[0], clientPubKey, dh_);
-
-    if (sharedSecretSize <= 0)
+    EVP_PKEY_CTX *derive_ctx = EVP_PKEY_CTX_new(server_params, nullptr);
+    if (EVP_PKEY_derive_init(derive_ctx) <= 0 || EVP_PKEY_derive_set_peer(derive_ctx, client_pub_key) <= 0)
     {
-      BN_free(clientPubKey);
-      DH_free(dh_);
-      logger_->log("SslServer:receiveKeyExchange: Failed to compute shared secret.");
+      logger_->log("Failed to initialize shared secret derivation.");
+      EVP_PKEY_CTX_free(derive_ctx);
+      EVP_PKEY_free(client_pub_key);
+      EVP_PKEY_free(server_params);
       return StatusCode::Error;
     }
 
-    // Store the shared secret as the pre-master secret in sslSharedInfo
-    sslSharedInfo.pre_master_secret_.assign(sharedSecret.begin(), sharedSecret.begin() + sharedSecretSize);
-    logger_->log("SslServer:receiveKeyExchange: DHE Key Exchange processed successfully.");
+    size_t secret_len = 0;
+    EVP_PKEY_derive(derive_ctx, nullptr, &secret_len);
+    std::vector<unsigned char> shared_secret(secret_len);
+    if (EVP_PKEY_derive(derive_ctx, shared_secret.data(), &secret_len) <= 0)
+    {
+      logger_->log("Failed to derive shared secret.");
+      EVP_PKEY_CTX_free(derive_ctx);
+      EVP_PKEY_free(client_pub_key);
+      EVP_PKEY_free(server_params);
+      return StatusCode::Error;
+    }
 
-    BN_free(clientPubKey);
-    DH_free(dh_); // Clean up DH structure after use
+    // Store the shared secret
+    sslSharedInfo.pre_master_secret_.assign(shared_secret.begin(), shared_secret.end());
+    logger_->log("DHE Key Exchange processed successfully.");
+
+    EVP_PKEY_CTX_free(derive_ctx);
+    EVP_PKEY_free(client_pub_key);
+    EVP_PKEY_free(server_params);
+    return StatusCode::Success;
   }
 
   else if (sslSharedInfo.chosen_cipher_suite_ == TLS_RSA_WITH_AES_128_CBC_SHA)
@@ -823,6 +839,22 @@ StatusCode SslServer::calculate_master_secret_and_session_keys(int client_id, SS
   sslSharedInfo.client_write_Iv_ = client_write_Iv;
   sslSharedInfo.server_write_Iv_ = server_write_Iv;
 
+  logger_->log("client write key: ");
+  std::string clientWriteKey(sslSharedInfo.client_write_key_.begin(), sslSharedInfo.client_write_key_.end());
+  logger_->log(clientWriteKey);
+
+  logger_->log("server write key: ");
+  std::string serverWriteKey(sslSharedInfo.server_write_key_.begin(), sslSharedInfo.server_write_key_.end());
+  logger_->log(serverWriteKey);
+
+  logger_->log("client write iv: ");
+  std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
+  logger_->log(clientWriteIv);
+
+  logger_->log("server write iv: ");
+  std::string serverWriteIv(sslSharedInfo.server_write_Iv_.begin(), sslSharedInfo.server_write_Iv_.end());
+  logger_->log(serverWriteIv);
+
   logger_->log("Master secret and session keys calculated successfully for client ID: " + std::to_string(client_id));
   return StatusCode::Success;
 }
@@ -863,13 +895,17 @@ SslClient *SslServer::handshake(int client_id)
   if (status == StatusCode::Error)
     return nullptr;
   // 4. send key exchange parameters
+  logger_->log("before send key exchange");
   status = this->send_key_exchange(client_id, sslSharedInfo, sslServerSession); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
+  logger_->log("after send key exchange");
   // 5. send done message
+  logger_->log("before send hello");
   status = this->send_hello_done(client_id, sslSharedInfo); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;
+  logger_->log("after send hello");
   // 6. receive client key exchange
   status = this->receive_key_exchange(client_id, sslSharedInfo, sslServerSession); // waiting for clientHello message
   if (status == StatusCode::Error)

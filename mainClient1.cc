@@ -1,10 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <openssl/provider.h>
 #include "../src/ssl/SslClient.h" // Make sure this path is correct
 
 int main(int argc, char *argv[])
 {
+
+  if (!OSSL_PROVIDER_load(NULL, "default"))
+  {
+    fprintf(stderr, "Failed to load the default provider in server.\n");
+    return 1;
+  }
+
   std::string c_idx = "0";
   if (argc > 1)
   {

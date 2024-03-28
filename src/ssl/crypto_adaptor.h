@@ -28,4 +28,6 @@ uint32_t generate_random_number();
 
 void append_BN_to_vector(const BIGNUM *bn, std::vector<uint8_t> &vec);
 std::vector<uint8_t> BIGNUM_to_vector(const BIGNUM *bn);
+BIGNUM *vector_to_BIGNUM(const std::vector<uint8_t> &vec);
+EVP_PKEY *BIGNUMs_to_EVP_PKEY_DH(const BIGNUM *p, const BIGNUM *g, const BIGNUM *pub_key);
 #endif // CRYPTO_ADAPTOR_H

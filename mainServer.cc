@@ -2,6 +2,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <pthread.h>
+#include <openssl/provider.h>
 
 #include "../src/ssl/SslServer.h" // Ensure this path is correct
 #include "../src/ssl/SslClient.h" // Ensure this path is correct
@@ -25,6 +26,12 @@ void *handle_client(void *arg)
 
 int main()
 {
+
+  if (!OSSL_PROVIDER_load(NULL, "default"))
+  {
+    fprintf(stderr, "Failed to load the default provider in server.\n");
+    return 1;
+  }
   SslServer *server = new SslServer("tst/server_certificate.pem", "tst/server_private_key.pem"); // Provide paths to your certificate and key
 
   if (server->socket_listen() != StatusCode::Success)

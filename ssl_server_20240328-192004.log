@@ -1,0 +1,21 @@
+2024-03-28 19:20:04: SslServer:constructor: SslServer object created. Server Log at 20240328-192004
+
+2024-03-28 19:20:04: SslServer:socket_listen:Starting server...
+2024-03-28 19:20:06: SslServer:socket_accept: TCP connection accepted.
+2024-03-28 19:20:06: SslServer:handshake:Receiving clientHello.
+2024-03-28 19:20:06: SslServer:receiveHello: Proceeding with DHE key exchange.
+2024-03-28 19:20:06: SslServer:sendHello: ServerHello message sent successfully.
+2024-03-28 19:20:06: SslServer:receiveHello: ClientHello message received and processed successfully.
+2024-03-28 19:20:06: SslServer:sendCertificate: Certificate sent successfully.
+2024-03-28 19:20:06: before send key exchange
+2024-03-28 19:20:06: SslServer:sendKeyExchange: Before sending the record
+2024-03-28 19:20:06: Just after sending the record: 0
+2024-03-28 19:20:06: SslServer:sendKeyExchange: DHE key exchange sent successfully.
+2024-03-28 19:20:06: About to return success in send key exchange
+2024-03-28 19:20:06: after send key exchange
+2024-03-28 19:20:06: before send hello
+2024-03-28 19:20:06: Flag 12
+2024-03-28 19:20:06: SslServer:sendHelloDone: HelloDone message sent successfully.
+2024-03-28 19:20:06: after send hello
+2024-03-28 19:20:06: SslServer:receiveKeyExchange: Failed to receive key exchange data.
+2024-03-28 19:20:06: SslClient:socket_accept:Failed in performing the handshake.

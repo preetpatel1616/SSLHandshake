@@ -47,18 +47,18 @@ public:
 
   struct ClientHello
   {
-    uint16_t tls_negotiate_version;      // The highest TLS version supported by the client
-    uint32_t random;                     // A client-generated random number
-    std::vector<uint16_t> cipher_suites; // List of supported cipher suites
+    uint16_t tls_negotiate_version_;      // The highest TLS version supported by the client
+    uint32_t random_;                     // A client-generated random number
+    std::vector<uint16_t> cipher_suites_; // List of supported cipher suites
   };
 
   // ServerHello structure
 
   struct ServerHello
   {
-    uint16_t chosen_tls_version; // The highest TLS version supported by the client
-    uint32_t random;             // A client-generated random number
-    uint16_t chosen_cipher_suite;
+    uint16_t chosen_tls_version_; // The highest TLS version supported by the client
+    uint32_t random_;             // A client-generated random number
+    uint16_t chosen_cipher_suite_;
   };
 
   // RecordHeader structure

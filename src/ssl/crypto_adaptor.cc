@@ -9,6 +9,9 @@
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#include <openssl/core_names.h>
+#include <openssl/param_build.h>
+#include <openssl/evp.h>
 
 #include <openssl/x509.h>
 #include <openssl/pem.h>
@@ -152,4 +155,79 @@ std::vector<uint8_t> BIGNUM_to_vector(const BIGNUM *bn)
   std::vector<uint8_t> vec(bn_len);
   BN_bn2bin(bn, vec.data()); // Convert BIGNUM to binary and store in vector
   return vec;
+}
+
+BIGNUM *vector_to_BIGNUM(const std::vector<uint8_t> &vec)
+{
+  if (vec.empty())
+  {
+    return nullptr;
+  }
+
+  // BN_bin2bn converts an array of bytes in big-endian order to a BIGNUM.
+  // The parameters are the byte array, its length, and an optional pre-allocated BIGNUM to use.
+  // If the third parameter is NULL, a new BIGNUM is created and returned.
+  BIGNUM *bn = BN_bin2bn(vec.data(), vec.size(), NULL);
+
+  return bn;
+}
+
+EVP_PKEY *BIGNUMs_to_EVP_PKEY_DH(const BIGNUM *p, const BIGNUM *g, const BIGNUM *pub_key)
+{
+  EVP_PKEY *dh_pkey = NULL;
+  EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);
+  if (pctx == NULL)
+  {
+    std::cerr << "Failed to create EVP_PKEY_CTX for DH" << std::endl;
+    return NULL;
+  }
+
+  OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
+  if (param_bld == NULL)
+  {
+    std::cerr << "Failed to create OSSL_PARAM_BLD" << std::endl;
+    EVP_PKEY_CTX_free(pctx);
+    return NULL;
+  }
+
+  if (!OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_FFC_P, p) ||
+      !OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_FFC_G, g) ||
+      !OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_PUB_KEY, pub_key))
+  {
+    std::cerr << "Failed to add DH parameters" << std::endl;
+    OSSL_PARAM_BLD_free(param_bld);
+    EVP_PKEY_CTX_free(pctx);
+    return NULL;
+  }
+
+  OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(param_bld);
+  if (params == NULL)
+  {
+    std::cerr << "Failed to convert BLD to PARAM" << std::endl;
+    OSSL_PARAM_BLD_free(param_bld);
+    EVP_PKEY_CTX_free(pctx);
+    return NULL;
+  }
+
+  if (EVP_PKEY_fromdata_init(pctx) <= 0)
+  {
+    std::cerr << "Failed to initialize fromdata" << std::endl;
+    OSSL_PARAM_free(params);
+    EVP_PKEY_CTX_free(pctx);
+    return NULL;
+  }
+
+  if (EVP_PKEY_fromdata(pctx, &dh_pkey, EVP_PKEY_KEYPAIR, params) <= 0)
+  {
+    std::cerr << "Failed to generate DH key from data" << std::endl;
+    OSSL_PARAM_free(params);
+    EVP_PKEY_CTX_free(pctx);
+    return NULL;
+  }
+
+  OSSL_PARAM_free(params);
+  OSSL_PARAM_BLD_free(param_bld);
+  EVP_PKEY_CTX_free(pctx);
+
+  return dh_pkey;
 }

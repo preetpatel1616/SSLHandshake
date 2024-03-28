@@ -1,6 +1,8 @@
-2024-03-27 23:10:24: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-27 23:10:26: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-27 23:10:26: Ssl:socket_recv_record: Record received successfully.
-2024-03-27 23:10:26: Ssl:socket_send_record:Record sent successfully.
-2024-03-27 23:10:26: Ssl:socket_send_record:Record sent successfully.
-2024-03-27 23:10:26: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:04: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-28 19:20:06: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-28 19:20:06: Ssl:socket_recv_record: Record received successfully.
+2024-03-28 19:20:06: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:06: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:06: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:06: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:06: Ssl::socket_recv_record: Couldn't receive header.

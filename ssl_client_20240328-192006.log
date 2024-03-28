@@ -1,0 +1,17 @@
+2024-03-28 19:20:06: SslClient object created. Client Log at 20240328-192006
+2024-03-28 19:20:06: SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.
+2024-03-28 19:20:06: SslClient:handshake:Sending clientHello.
+2024-03-28 19:20:06: Ssl:socket_send_record:Record sent successfully.
+2024-03-28 19:20:06: SslClient:send_hello:Successfully sent ClientHello message.
+2024-03-28 19:20:06: SslClient:handshake:Receiving serverHello.
+2024-03-28 19:20:06: Ssl:socket_recv_record: Record received successfully.
+2024-03-28 19:20:06: SslClient:receive_hello: ServerHello message received successfully.
+2024-03-28 19:20:06: Ssl:socket_recv_record: Record received successfully.
+2024-03-28 19:20:06: SslClient:receiveCertificate: Certificate received and verified successfully.
+2024-03-28 19:20:06: Before
+2024-03-28 19:20:06: Inside
+2024-03-28 19:20:06: Ssl:socket_recv_record: Record received successfully.
+2024-03-28 19:20:06: Before checking the message type
+2024-03-28 19:20:06: Flag 1
+2024-03-28 19:20:06: Failed to get public key length.
+2024-03-28 19:20:06: SslClient::socket_connect:Failed in performing the handshake.
