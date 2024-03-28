@@ -1,41 +1,51 @@
-2024-03-27 09:13:21: TCP:init:Initializing TCP object.
-2024-03-27 09:13:21: TCP:open_socket:Attempting to open a TCP socket.
-2024-03-27 09:13:21: TCP:open_socket:TCP socket opened successfully.
-2024-03-27 09:13:21: TCP:bind_to_port:Attempting to bind the socket to port.
-2024-03-27 09:13:21: TCP:bind_to_port: Port = 20001 SockFd = 4
-2024-03-27 09:13:21: TCP:bind_to_port:Port bound successfully on 20001
-2024-03-27 09:13:21: TCP:init:TCP object created successfully.
-2024-03-27 09:13:21: TCP:socket_listen:Setting socket to listen.
-2024-03-27 09:13:21: TCP:socket_listen:Socket now listening.
-2024-03-27 09:13:21: TCP:socket_accept:Waiting to accept a new connection.
-2024-03-27 09:13:23: TCP:init:Initializing TCP object.
-2024-03-27 09:13:23: TCP:open_socket:Attempting to open a TCP socket.
-2024-03-27 09:13:23: TCP:open_socket:TCP socket opened successfully.
-2024-03-27 09:13:23: TCP:bind_to_port:Attempting to bind the socket to port.
-2024-03-27 09:13:23: TCP:bind_to_port: Port = 20002 SockFd = 4
-2024-03-27 09:13:23: TCP:bind_to_port:Port bound successfully on 20002
-2024-03-27 09:13:23: TCP:init:TCP object created successfully.
-2024-03-27 09:13:23: TCP:socket_connect:Attempting to connect to server 172.27.8.7:20001.
+2024-03-27 23:10:24: TCP:init:Initializing TCP object.
+2024-03-27 23:10:24: TCP:open_socket:Attempting to open a TCP socket.
+2024-03-27 23:10:24: TCP:open_socket:TCP socket opened successfully.
+2024-03-27 23:10:24: TCP:bind_to_port:Attempting to bind the socket to port.
+2024-03-27 23:10:24: TCP:bind_to_port: Port = 20000 SockFd = 4
+2024-03-27 23:10:24: TCP:bind_to_port:Port bound successfully on 20000
+2024-03-27 23:10:24: TCP:init:TCP object created successfully.
+2024-03-27 23:10:24: TCP:socket_listen:Setting socket to listen.
+2024-03-27 23:10:24: TCP:socket_listen:Socket now listening.
+2024-03-27 23:10:24: TCP:socket_accept:Waiting to accept a new connection.
+2024-03-27 23:10:26: TCP:init:Initializing TCP object.
+2024-03-27 23:10:26: TCP:open_socket:Attempting to open a TCP socket.
+2024-03-27 23:10:26: TCP:open_socket:TCP socket opened successfully.
+2024-03-27 23:10:26: TCP:bind_to_port:Attempting to bind the socket to port.
+2024-03-27 23:10:26: TCP:bind_to_port: Port = 20001 SockFd = 4
+2024-03-27 23:10:26: TCP:bind_to_port:Port bound successfully on 20001
+2024-03-27 23:10:26: TCP:init:TCP object created successfully.
+2024-03-27 23:10:26: TCP:socket_connect:Attempting to connect to server 172.27.8.7:20000.
 
-2024-03-27 09:13:23: TCP:socket_connect:Successfully connected with the server.
-2024-03-27 09:13:23: TCP:socket_accept:New TCP connection accepted.
-2024-03-27 09:13:23: Sent buffer: 
-2024-03-27 09:13:23: 	
-2024-03-27 09:13:23: Sent buffer length: 
-2024-03-27 09:13:23: 14
-2024-03-27 09:13:23: received buffer: 
-2024-03-27 09:13:23: 	
-2024-03-27 09:13:23: received buffer length: 
-2024-03-27 09:13:23: 5
-2024-03-27 09:13:23: received buffer: 
-2024-03-27 09:13:23: (¡?
-2024-03-27 09:13:23: received buffer length: 
-2024-03-27 09:13:23: 9
-2024-03-27 09:13:23: received buffer: 
-2024-03-27 09:13:23: pU
-2024-03-27 09:13:23: received buffer length: 
-2024-03-27 09:13:23: 5
-2024-03-27 09:13:23: received buffer: 
-2024-03-27 09:13:23: 0Çk0ÇS†CQ¯JÙÑYûXÀ(ÙG#ä©¶¸.0	*ÜHÜ˜
-2024-03-27 09:13:23: received buffer length: 
-2024-03-27 09:13:23: 880
+2024-03-27 23:10:26: TCP:socket_connect:Successfully connected with the server.
+2024-03-27 23:10:26: TCP:socket_accept:New TCP connection accepted.
+2024-03-27 23:10:26: Sent buffer: 
+2024-03-27 23:10:26: 	
+2024-03-27 23:10:26: Sent buffer length: 
+2024-03-27 23:10:26: 14
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: 	
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 5
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: {§≈˛
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 9
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: pU
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 5
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: 0Çk0ÇS†CQ¯JÙÑYûXÀ(ÙG#ä©¶¸.0	*ÜHÜ˜
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 880
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: Å
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 5
+2024-03-27 23:10:26: received buffer: 
+2024-03-27 23:10:26: ¡nÕr|§4⁄56{Eˆ⁄K=Õﬂwl£~óÚ/D;fåWÊ\óî€ *Y5]∂πΩ€Î˚Ñ≤ˇX¡2˜|‹7ó\‡UXè˚h'ŸÕ:Ãç7«Ö∆A‹†—crŸ´˚øàË Ùhhn÷zQ©π„´ÛmïÈÉ°6π–≈(∫ØÇï
+2024-03-27 23:10:26: received buffer length: 
+2024-03-27 23:10:26: 129
+2024-03-27 23:10:26: TCP:socket_close:Closing the socket.
+2024-03-27 23:10:26: TCP:socket_close:Socket closed successfully.

@@ -14,7 +14,11 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
 #include <openssl/ssl.h>
+#include <openssl/dh.h>
+#include <openssl/bn.h>
 #include <openssl/err.h>
 
 using namespace std;
@@ -416,9 +420,7 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
   else if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA)
   {
     logger_->log("Flag 2");
-    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
-    EVP_PKEY *params = NULL;
-    EVP_PKEY *dhkey = NULL;
+    auto pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, NULL);
     if (!pctx)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to create EVP_PKEY_CTX for parameters generation");
@@ -431,44 +433,61 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
     if (EVP_PKEY_paramgen_init(pctx) <= 0)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to initialize parameter generation.");
+      EVP_PKEY_CTX_free(pctx);
       return StatusCode::Error;
     }
-    else if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx, 2048) <= 0)
+    logger_->log("Flag 4");
+    if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx, 512) <= 0)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to set DH parameter generation prime length.");
+      EVP_PKEY_CTX_free(pctx);
       return StatusCode::Error;
     }
-    else if (EVP_PKEY_paramgen(pctx, &params) <= 0)
+    logger_->log("Flag 5");
+    EVP_PKEY *params = NULL;
+
+    if (EVP_PKEY_paramgen(pctx, &params) <= 0)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to generate parameters.");
-return StatusCode::Error;
+      EVP_PKEY_CTX_free(pctx);
+      return StatusCode::Error;
     }
+    logger_->log("Flag 6");
 
-    logger_->log("Flag 4");
+    EVP_PKEY_CTX_free(pctx); // Param generation context no longer needed
+
+    logger_->log("Flag 7");
 
     // Generate dh key pair
-    EVP_PKEY_CTX *kctx = EVP_PKEY_CTX_new(params, NULL);
+    auto kctx = EVP_PKEY_CTX_new(params, NULL);
     if (!kctx)
     {
       logger_->log("SslServer:sendKeyExchange: Failed to create EVP_PKEY_CTX for key generation");
+      EVP_PKEY_free(params);
+      return StatusCode::Error;
+    }
+
+    logger_->log("Flag 8");
+
+    if (EVP_PKEY_keygen_init(kctx) <= 0)
+    {
+      logger_->log("SslServer:sendKeyExchange: Failed to initialize or generate key pair");
       EVP_PKEY_CTX_free(pctx);
       EVP_PKEY_free(params);
       return StatusCode::Error;
     }
 
-    logger_->log("Flag 4");
+    EVP_PKEY *dhkey = NULL;
 
-    if (EVP_PKEY_keygen_init(kctx) <= 0 || EVP_PKEY_keygen(kctx, &dhkey) <= 0)
+    if (EVP_PKEY_keygen(kctx, &dhkey) <= 0)
     {
-      logger_->log("SslServer:sendKeyExchange: Failed to initialize or generate key pair");
-      EVP_PKEY_CTX_free(pctx);
+      logger_->log("SslServer:sendKeyExchange: Failed to generate key pair.");
       EVP_PKEY_CTX_free(kctx);
-      if (params)
-        EVP_PKEY_free(params);
-      if (dhkey)
-        EVP_PKEY_free(dhkey);
+      EVP_PKEY_free(params);
       return StatusCode::Error;
     }
+    EVP_PKEY_CTX_free(kctx); // Key generation context no longer needed
+
     // Now you can access p, g, pub_key, and priv_key
     BIGNUM *p = NULL, *g = NULL, *pub_key = NULL, *priv_key = NULL;
     EVP_PKEY_get_bn_param(params, "p", &p);
@@ -476,13 +495,14 @@ return StatusCode::Error;
     EVP_PKEY_get_bn_param(dhkey, "pub", &pub_key);
     EVP_PKEY_get_bn_param(dhkey, "priv", &priv_key);
 
-    logger_->log("Flag 6");
+    logger_->log("Flag 9");
     // Since DH_get0_* does not increase the reference count, duplicating BIGNUM* for safe memory management
     sslSharedInfo.dh_p_ = BN_dup(p);
     sslSharedInfo.dh_g_ = BN_dup(g);
     sslSharedInfo.server_dh_public_key_ = BIGNUM_to_vector(BN_dup(pub_key));      // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
     sslServerSession.server_dh_private_key_ = BIGNUM_to_vector(BN_dup(priv_key)); // Assuming BIGNUM_to_vector converts BIGNUM* to a std::vector<uint8_t>
 
+    logger_->log("Flag 10");
     // Serialize p, g, and public key
     std::vector<uint8_t> serializedData;
     auto p_vec = BIGNUM_to_vector(p);
@@ -491,7 +511,7 @@ return StatusCode::Error;
     serializedData.insert(serializedData.end(), p_vec.begin(), p_vec.end());
     serializedData.insert(serializedData.end(), g_vec.begin(), g_vec.end());
     serializedData.insert(serializedData.end(), pub_key_vec.begin(), pub_key_vec.end());
-    
+
     // Construct the record (simplified, adjust according to your Record structure)
     Record record;
     record.hdr.record_type = REC_HANDSHAKE;
@@ -501,6 +521,7 @@ return StatusCode::Error;
     // Copy the serialized data into the record's data
     std::memcpy(record.data, serializedData.data(), serializedData.size());
 
+    logger_->log("Flag 11");
     // Send the record
     StatusCode status = Ssl::socket_send_record(record, client_id_to_server_session_[client_id].tcpClient);
     if (status != StatusCode::Success)
@@ -526,6 +547,7 @@ return StatusCode::Error;
 
 StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInfo)
 {
+  logger_->log("Flag 12");
   if (this->closed_)
   {
     logger_->log("SslServer:sendHelloDone: Server is closed, cannot send HelloDone.");
