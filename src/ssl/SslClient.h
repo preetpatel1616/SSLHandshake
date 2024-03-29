@@ -30,8 +30,9 @@ public:
   const unsigned int MESSAGE_THRESHOLD = 3;
 
   // For sending and receiving raw string data (application data)
-  virtual StatusCode socket_send_string(const std::string &send_string);
-  virtual StatusCode socket_recv_string(std::string *recv_string);
+
+virtual StatusCode socket_send_string(const std::string &send_string, TCP* tcpInstance);
+  virtual StatusCode socket_recv_string(std::string *recv_string, TCP* tcpInstance);
 
   StatusCode socket_connect(const std::string &server_ip, int server_port, std::string key_exchange_algorithm);
   void handle_dhe();

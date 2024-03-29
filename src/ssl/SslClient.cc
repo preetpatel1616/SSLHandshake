@@ -921,9 +921,21 @@ StatusCode SslClient::socket_connect(const std::string &server_ip, int server_po
   return StatusCode::Success;
 }
 
-StatusCode SslClient::socket_send_string(const std::string &send_string)
+StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tcpInstance)
 { // sends the given string of daa over the TCP connection
-  StatusCode status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
+
+  StatusCode status;
+
+  if (tcpInstance == nullptr)
+  {
+    status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
+  }
+  else
+  {
+
+    status = Ssl::socket_send_string(send_string, sslSharedInfo.server_write_key_, sslSharedInfo.server_write_Iv_, tcpInstance);
+  }
+
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:socket_send_string:Failed in sending the message.");
@@ -933,15 +945,27 @@ StatusCode SslClient::socket_send_string(const std::string &send_string)
     logger_->log("SslClient:socket_send_string:Successful in sending the message.");
   }
 
-  if(this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256){
+  if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
     handle_dhe();
   }
 
   return status;
 }
-StatusCode SslClient::socket_recv_string(std::string *recv_string) // sends the given string of daa over the TCP connection
+StatusCode SslClient::socket_recv_string(std::string *recv_string, TCP *tcpInstance) // sends the given string of daa over the TCP connection
 {
-  StatusCode status = Ssl::socket_recv_string(recv_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
+
+  StatusCode status;
+
+  if (tcpInstance == nullptr)
+  {
+    status = Ssl::socket_recv_string(recv_string, sslSharedInfo.server_write_key_, sslSharedInfo.server_write_Iv_, nullptr);
+  }
+  else
+  {
+    status = Ssl::socket_recv_string(recv_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, tcpInstance);
+  }
+
   if (status != StatusCode::Success)
   {
     logger_->log("SslClient:socket_send:Failed in sending the message.");

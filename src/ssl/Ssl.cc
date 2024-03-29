@@ -119,9 +119,9 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
     return StatusCode::Error;
   }
 
-  if(tcpInstance!=nullptr){
-    tcp_=tcpInstance;
-  }
+  // if(tcpInstance!=nullptr){
+  //   tcp_=tcpInstance;
+  // }
 
   // encrypt
   string encrypted_data;

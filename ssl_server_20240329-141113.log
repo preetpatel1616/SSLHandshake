@@ -1,0 +1,44 @@
+2024-03-29 14:11:13: SslServer:constructor: SslServer object created. Server Log at 20240329-141113
+
+2024-03-29 14:11:13: SslServer:socket_listen:Starting server...
+2024-03-29 14:11:15: SslServer:socket_accept: TCP connection accepted.
+2024-03-29 14:11:15: SslServer:handshake:Receiving clientHello.
+2024-03-29 14:11:15: SslServer:receiveHello: Proceeding with DHE key exchange.
+2024-03-29 14:11:15: SslServer:sendHello: ServerHello message sent successfully.
+2024-03-29 14:11:15: SslServer:receiveHello: ClientHello message received and processed successfully.
+2024-03-29 14:11:15: SslServer:sendCertificate: Certificate sent successfully.
+2024-03-29 14:11:15: SslServer:sendKeyExchange: Before sending the record
+2024-03-29 14:11:15: Just after sending the record: 0
+2024-03-29 14:11:15: SslServer:sendKeyExchange: DHE key exchange sent successfully.
+2024-03-29 14:11:15: About to return success in send key exchange
+2024-03-29 14:11:15: SslServer:sendHelloDone: HelloDone message sent successfully.
+2024-03-29 14:11:15: DHE Key Exchange processed successfully.
+2024-03-29 14:11:15: SSLSharedInfo Data
+
+2024-03-29 14:11:15: Chosen TLS version: 
+2024-03-29 14:11:15: 771
+2024-03-29 14:11:15: Chosen Cipher Suite: 
+2024-03-29 14:11:15: 51
+2024-03-29 14:11:15: Client Random: 
+2024-03-29 14:11:15: 305419896
+2024-03-29 14:11:15: Server Random: 
+2024-03-29 14:11:15: 2271560481
+2024-03-29 14:11:15: Pre-Master Secret (Hex): 
+2024-03-29 14:11:15: 2de2b17fdb713243c0254bb287d6bdfb6f19de82ce97adbe49812625537f8af3cda61a3a87ab6b81f0cfe3b552bc74f5528e75b09b2ef6c8ca774d51d3519725
+2024-03-29 14:11:15: client write key size: 
+2024-03-29 14:11:15: 16
+2024-03-29 14:11:15: server write key size: 
+2024-03-29 14:11:15: 16
+2024-03-29 14:11:15: client seed: 
+2024-03-29 14:11:15: ¯ÿÿÿù ‘s
+2024-03-29 14:11:15: Client write key (Hex): 650df6732e78ee0459d2a963ae9cbf02
+2024-03-29 14:11:15: Server write key (Hex): 4fe15b62b0b056fa2a42381b7adacda8
+2024-03-29 14:11:15: client write iv: 
+2024-03-29 14:11:15: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 14:11:15: server write iv: 
+2024-03-29 14:11:15: Ý¡ÕÎFäf}Ð—@¶
+2024-03-29 14:11:15: Master secret and session keys calculated successfully for client ID: 1
+2024-03-29 14:11:15: SslServer:receiveFinished: Finished message received and verified successfully.
+2024-03-29 14:11:15: SslServer:sendFinished: Finished message sent successfully.
+2024-03-29 14:11:15: SslClient:socket_accept:Successful in establishing an SSL connection with the server.

@@ -16,7 +16,7 @@ void *handle_client(void *arg)
     if (client != nullptr)
     {
         std::string recv_msg;
-        StatusCode code = client->socket_recv_string(&recv_msg);
+        StatusCode code = client->socket_recv_string(&recv_msg, client->tcp_);
 
         std::cout << "Server received: '" << recv_msg << "' with code: " << static_cast<int>(code) << std::endl;
     }

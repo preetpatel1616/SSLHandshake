@@ -1139,7 +1139,7 @@ StatusCode SslServer::broadcast(const std::string &msg)
       continue; // Skip this client if SslClient is missing
     }
     // Send the message using the SslClient's method, assume it exists and correctly encrypts the message
-    StatusCode status = session.sslClient->socket_send_string(msg);
+    StatusCode status = session.sslClient->socket_send_string(msg, session.tcpClient);
     if (status != StatusCode::Success)
     {
       logger_->log("SslServer:broadcast:Partial failure: Could not send the complete message to client ID " + std::to_string(pair.first));
@@ -1163,7 +1163,7 @@ StatusCode SslServer::broadcast(const std::string &msg)
 StatusCode SslServer::socket_send_string(int client_id, const std::string &send_string)
 {
 
-  StatusCode status = client_id_to_server_session_[client_id].sslClient->socket_send_string(send_string);
+  StatusCode status = client_id_to_server_session_[client_id].sslClient->socket_send_string(send_string, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:socket_send_string:Failed in sending the message.");
@@ -1184,7 +1184,7 @@ StatusCode SslServer::socket_send_string(int client_id, const std::string &send_
 
 StatusCode SslServer::socket_recv_string(int client_id, std::string *recv_string)
 {
-  StatusCode status = client_id_to_server_session_[client_id].sslClient->socket_recv_string(recv_string);
+  StatusCode status = client_id_to_server_session_[client_id].sslClient->socket_recv_string(recv_string, client_id_to_server_session_[client_id].tcpClient);
   if (status != StatusCode::Success)
   {
     logger_->log("SslServer:socket_recv_string:Failed in receiving the message.");
