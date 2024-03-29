@@ -33,9 +33,10 @@ const uint8_t Ssl::HS_SERVER_HELLO_DONE = 0x0E;
 const uint8_t Ssl::HS_CERTIFICATE_VERIFY = 0x0F;
 const uint8_t Ssl::HS_CLIENT_KEY_EXCHANGE = 0x10;
 const uint8_t Ssl::HS_FINISHED = 0x14;
+const uint8_t Ssl::HS_KEYS_REFRESH = 0x07;
 
-// ciphersuites
-const uint16_t Ssl::TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256 = 0x0033;
+    // ciphersuites
+    const uint16_t Ssl::TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256 = 0x0033;
 const uint16_t Ssl::TLS_RSA_WITH_AES_128_CBC_SHA_256 = 0x002F;
 
 Ssl::Ssl()

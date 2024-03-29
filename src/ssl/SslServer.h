@@ -21,6 +21,7 @@ public:
 
   struct SSLServerSession
   {
+    int client_id;
     std::vector<uint8_t> server_dh_private_key_; // Server's DH private key
     SslClient *sslClient;
     TCP *tcpClient;
@@ -44,6 +45,10 @@ public:
   StatusCode shutdown();
   StatusCode broadcast(const std::string &msg);
   bool server_supports(uint16_t tls_version);
+
+  void handle_dhe(int client_id);
+  StatusCode receive_key_refresh_request(int client_id);
+  
 
   // For sending and receiving raw string data (application data)
   virtual StatusCode socket_send_string(int client_id, const std::string &send_string);

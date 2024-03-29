@@ -27,16 +27,19 @@ public:
   ~SslClient();
 
   unsigned int messageCounter = 0;
-  const unsigned int MESSAGE_THRESHOLD = 5;
+  const unsigned int MESSAGE_THRESHOLD = 3;
 
   // For sending and receiving raw string data (application data)
   virtual StatusCode socket_send_string(const std::string &send_string);
   virtual StatusCode socket_recv_string(std::string *recv_string);
 
   StatusCode socket_connect(const std::string &server_ip, int server_port, std::string key_exchange_algorithm);
+  void handle_dhe();
+  StatusCode send_key_refresh_request();
 
-  // Handshake methods
-  StatusCode send_hello();
+      // Handshake methods
+      StatusCode
+      send_hello();
   StatusCode receive_hello();
   StatusCode receive_certificate();
   StatusCode receive_key_exchange();

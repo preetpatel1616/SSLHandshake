@@ -942,6 +942,7 @@ SslClient *SslServer::handshake(int client_id)
   SSLSharedInfo sslSharedInfo;
   SSLServerSession sslServerSession;
 
+  sslServerSession.client_id = client_id;
   sslServerSession.tcpClient = clientTcp;
 
   client_id_to_server_session_[client_id] = sslServerSession;
@@ -994,6 +995,62 @@ SslClient *SslServer::handshake(int client_id)
   this->client_id_to_shared_info_[client_id] = sslSharedInfo;
 
   return sslServerSession.sslClient;
+}
+
+StatusCode SslServer::receive_key_refresh_request(int client_id)
+{
+
+  if (this->closed_)
+  {
+    logger_->log("SslServer:receive_key_refresh_request: Connection is closed.");
+    return StatusCode::Error;
+  }
+
+  // Receive the Finished message
+  Record recv_record;
+  StatusCode status = Ssl::socket_recv_record(&recv_record, client_id_to_server_session_[client_id].tcpClient);
+  if (status != StatusCode::Success)
+  {
+    logger_->log("SslServer:receive_key_refresh_request: Failed to receive keys refresh request message.");
+    return StatusCode::Error;
+  }
+
+  // Verify that the received record is a Finished message
+  if (recv_record.data[0] != HS_KEYS_REFRESH)
+  {
+    logger_->log("SslServer:receive_key_refresh_request: Not keys refresh request message");
+    return StatusCode::Error;
+  }
+
+  logger_->log("SslServer:receive_key_refresh_request: Keys refresh request message received successfully.");
+  return StatusCode::Success;
+}
+
+void SslServer::handle_dhe(int client_id)
+{
+
+  this->client_id_to_server_session_[client_id].sslClient->messageCounter += 1;
+
+  unsigned int clientMessageCounter = this->client_id_to_server_session_[client_id].sslClient->messageCounter;
+  const unsigned int clientMessageThreshold = this->client_id_to_server_session_[client_id].sslClient->MESSAGE_THRESHOLD;
+
+  if (clientMessageCounter == clientMessageThreshold)
+  {
+
+    SSLSharedInfo sslSharedInfo = client_id_to_shared_info_[client_id];
+    SSLServerSession sslServerSession = client_id_to_server_session_[client_id];
+
+    StatusCode status = receive_key_refresh_request(client_id);
+    status = send_key_exchange(client_id, sslSharedInfo, sslServerSession);
+    status = receive_key_exchange(client_id, sslSharedInfo, sslServerSession);
+    status = calculate_master_secret_and_session_keys(client_id, sslSharedInfo);
+
+    if (status == StatusCode::Success)
+    {
+      logger_->log("SslClient:handle_dhe: Successfully refreshed session keys.");
+    }
+    this->client_id_to_server_session_[client_id].sslClient->messageCounter = 0;
+  }
 }
 
 SslClient *SslServer::socket_accept()
@@ -1061,11 +1118,6 @@ StatusCode SslServer::shutdown()
   return StatusCode::Success;
 }
 
-// vector<Ssl *> SslServer::get_clients() const
-// {
-//   return vector<Ssl *>(this->ssl_clients_);
-// }
-
 StatusCode SslServer::broadcast(const std::string &msg)
 {
   if (this->closed_) // if the server is closed, returns -1
@@ -1094,6 +1146,15 @@ StatusCode SslServer::broadcast(const std::string &msg)
       // Consider how you want to handle partial failures: stop the broadcast, log and continue, etc.
     }
 
+    else
+    {
+      if (client_id_to_shared_info_[session.client_id].chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+      {
+
+        handle_dhe(session.client_id);
+      }
+    }
+
     logger_->log("SslServer:broadcast:Secure broadcast completed successfully.");
     return StatusCode::Success;
   }
@@ -1111,6 +1172,13 @@ StatusCode SslServer::socket_send_string(int client_id, const std::string &send_
   {
     logger_->log("SslServer:socket_send_string:Successful in sending the message.");
   }
+
+  if (client_id_to_shared_info_[client_id].chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+
+    handle_dhe(client_id);
+  }
+
   return status;
 }
 
@@ -1124,6 +1192,11 @@ StatusCode SslServer::socket_recv_string(int client_id, std::string *recv_string
   else
   {
     logger_->log("SslServer:socket_recv_string:Successful in receiving the message.");
+  }
+
+  if (client_id_to_shared_info_[client_id].chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+    handle_dhe(client_id);
   }
   return status;
 }

@@ -630,7 +630,7 @@ StatusCode SslClient::send_finished()
   // Create record
   Record record;
   record.hdr.record_type = REC_HANDSHAKE;
-  record.hdr.tls_version = TLS_1_2; // Assuming TLS version is hardcoded or determined elsewhere
+  record.hdr.tls_version = sslSharedInfo.chosen_tls_version_; // Assuming TLS version is hardcoded or determined elsewhere
   record.hdr.data_size = finishedMessage.size();
   record.data = new char[record.hdr.data_size];
   std::memcpy(record.data, finishedMessage.data(), record.hdr.data_size);
@@ -689,29 +689,6 @@ StatusCode SslClient::receive_finished()
 
   logger_->log("SSLClient:receiveFinished: Finished message received and verified successfully.");
   return StatusCode::Success;
-}
-
-// Helper function for the PRF; TLS 1.2 uses HMAC with SHA-256
-bool tls12_prf(const std::vector<uint8_t> &secret, const std::string &label, const std::vector<uint8_t> &seed, std::vector<uint8_t> &output)
-{
-  // Label + Seed as per TLS 1.2 PRF specification
-  std::vector<uint8_t> label_seed(label.begin(), label.end());
-  label_seed.insert(label_seed.end(), seed.begin(), seed.end());
-
-  // Initialize HMAC context
-  unsigned int outlen;
-  std::vector<uint8_t> tmp(EVP_MAX_MD_SIZE);
-
-  HMAC_CTX *ctx = HMAC_CTX_new();
-  HMAC_Init_ex(ctx, secret.data(), secret.size(), EVP_sha256(), nullptr);
-  HMAC_Update(ctx, label_seed.data(), label_seed.size());
-  HMAC_Final(ctx, tmp.data(), &outlen);
-  HMAC_CTX_free(ctx);
-
-  output.resize(outlen);
-  std::copy(tmp.begin(), tmp.begin() + outlen, output.begin());
-
-  return true;
 }
 
 StatusCode SslClient::calculate_master_secret_and_session_keys()
@@ -853,6 +830,54 @@ StatusCode SslClient::handshake()
   return StatusCode::Success;
 }
 
+StatusCode SslClient::send_key_refresh_request()
+{
+  // Create the key refresh request message
+  std::vector<uint8_t> requestMessage;
+  requestMessage.push_back(HS_KEYS_REFRESH); // Message type for keys refresh request message
+
+  // Create record
+  Record record;
+  record.hdr.record_type = REC_HANDSHAKE;
+  record.hdr.tls_version = sslSharedInfo.chosen_tls_version_; // Assuming TLS version is hardcoded or determined elsewhere
+  record.hdr.data_size = requestMessage.size();
+  record.data = new char[record.hdr.data_size];
+  std::memcpy(record.data, requestMessage.data(), record.hdr.data_size);
+
+  // Send the Finished message
+  StatusCode status = socket_send_record(record, nullptr);
+  if (status != StatusCode::Success)
+  {
+    logger_->log("SslClient:send_key_refresh_request: Failed to send the keys refresh request message.");
+    delete[] record.data; // Remember to free allocated memory on error
+    return StatusCode::Error;
+  }
+
+  delete[] record.data; // Free the allocated memory
+  logger_->log("SslClient:send_key_refresh_request: Keys refresh request message sent successfully.");
+  return StatusCode::Success;
+}
+
+void SslClient::handle_dhe()
+{
+  this->messageCounter += 1;
+
+  if (this->messageCounter == this->MESSAGE_THRESHOLD)
+  {
+
+    StatusCode status = send_key_refresh_request();
+    status = receive_key_exchange();
+    status = send_key_exchange();
+    status = calculate_master_secret_and_session_keys();
+
+    if (status == StatusCode::Success)
+    {
+      logger_->log("SslClient:handle_dhe: Successfully refreshed session keys.");
+    }
+    this->messageCounter = 0;
+  }
+}
+
 StatusCode SslClient::socket_connect(const std::string &server_ip, int server_port, string key_exchange_algorithm)
 {
   // Here's the typical flow:
@@ -907,6 +932,11 @@ StatusCode SslClient::socket_send_string(const std::string &send_string)
   {
     logger_->log("SslClient:socket_send_string:Successful in sending the message.");
   }
+
+  if(this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256){
+    handle_dhe();
+  }
+
   return status;
 }
 StatusCode SslClient::socket_recv_string(std::string *recv_string) // sends the given string of daa over the TCP connection
@@ -919,6 +949,11 @@ StatusCode SslClient::socket_recv_string(std::string *recv_string) // sends the 
   else
   {
     logger_->log("SslClient:socket_send:Successful in sending the message.");
+  }
+
+  if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+    handle_dhe();
   }
   return status;
 }

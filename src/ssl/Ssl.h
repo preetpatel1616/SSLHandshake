@@ -26,6 +26,7 @@ public:
   static const uint8_t HS_CERTIFICATE_VERIFY;
   static const uint8_t HS_CLIENT_KEY_EXCHANGE;
   static const uint8_t HS_FINISHED;
+  static const uint8_t HS_KEYS_REFRESH;
 
   // Record Types
   static const uint8_t REC_CHANGE_CIPHER_SPEC;
@@ -122,12 +123,11 @@ public:
   virtual StatusCode socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance);
   virtual StatusCode socket_recv_string(std::string *recv_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance);
 
-      // For sending and receiving SSL Records
-  virtual StatusCode socket_send_record(const Record &send_record, TCP* tcpInstance);
-  virtual StatusCode socket_recv_record(Record *recv_record, TCP* tcpInstance);
+  // For sending and receiving SSL Records
+  virtual StatusCode socket_send_record(const Record &send_record, TCP *tcpInstance);
+  virtual StatusCode socket_recv_record(Record *recv_record, TCP *tcpInstance);
   TCP *tcp_; // a pointer to a TCP object
 protected:
-
   Logger *logger_ = nullptr; // a pointer to a Logger object
   EVP_PKEY *dhKeyPair = nullptr;
 };

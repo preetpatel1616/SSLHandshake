@@ -1,0 +1,50 @@
+2024-03-29 07:27:07: SslClient object created. Client Log at 20240329-072707
+2024-03-29 07:27:07: SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.
+2024-03-29 07:27:07: SslClient:handshake:Sending clientHello.
+2024-03-29 07:27:07: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 07:27:07: SslClient:send_hello:Successfully sent ClientHello message.
+2024-03-29 07:27:07: SslClient:handshake:Receiving serverHello.
+2024-03-29 07:27:07: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 07:27:07: SslClient:receive_hello: ServerHello message received successfully.
+2024-03-29 07:27:07: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 07:27:07: SslClient:receiveCertificate: Certificate received and verified successfully.
+2024-03-29 07:27:07: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 07:27:07: Before checking the message type
+2024-03-29 07:27:07: SslClient:receiveKeyExchange: Key exchange processed successfully.
+2024-03-29 07:27:07: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 07:27:07: SslClient:receiveHelloDone: HelloDone message received successfully.
+2024-03-29 07:27:07: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 07:27:07: SslClient:sendKeyExchange: DHE Key Exchange sent successfully.
+2024-03-29 07:27:07: SSLSharedInfo Data
+
+2024-03-29 07:27:07: Chosen TLS version: 
+2024-03-29 07:27:07: 771
+2024-03-29 07:27:07: Chosen Cipher Suite: 
+2024-03-29 07:27:07: 51
+2024-03-29 07:27:07: Client Random: 
+2024-03-29 07:27:07: 305419896
+2024-03-29 07:27:07: Server Random: 
+2024-03-29 07:27:07: 2271560481
+2024-03-29 07:27:07: Pre-Master Secret (Hex): 
+2024-03-29 07:27:07: 8b7fdf6a6762d3508bc6b8e23d0932288d40fc1c141c6557b6230fede9379c1acf4f466f21c2707f5ca38fe4957c5f11fb0fb962360420b38e58e6bee5a65089
+2024-03-29 07:27:07: client write key size: 
+2024-03-29 07:27:07: 16
+2024-03-29 07:27:07: server write key size: 
+2024-03-29 07:27:07: 16
+2024-03-29 07:27:07: server seed: 
+2024-03-29 07:27:07: ¯ÿÿÿù ‘s
+2024-03-29 07:27:07: Client write key (Hex): 7f88aab8e37f67ec43b43c9fe4feb897
+2024-03-29 07:27:07: Server write key (Hex): 50be01d8c516c397b86b2c15c45048c9
+2024-03-29 07:27:07: client write iv: 
+2024-03-29 07:27:07: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 07:27:07: server write iv: 
+2024-03-29 07:27:07: Ý¡ÕÎFäf}Ð—@¶
+2024-03-29 07:27:07: SSLClient: Successfully calculated master secret and derived session keys.
+2024-03-29 07:27:07: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 07:27:07: SslClient:sendFinished: Finished message sent successfully.
+2024-03-29 07:27:07: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 07:27:07: SSLClient:receiveFinished: Finished message received and verified successfully.
+2024-03-29 07:27:07: SslClient:socket_connect:Successful in establishing an SSL connection with the server.
+2024-03-29 07:27:07: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 07:27:07: SslClient:socket_send_string:Successful in sending the message.
