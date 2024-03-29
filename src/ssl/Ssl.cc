@@ -118,6 +118,10 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
     return StatusCode::Error;
   }
 
+  if(tcpInstance!=nullptr){
+    tcp_=tcpInstance;
+  }
+
   // encrypt
   string encrypted_data;
   if (aes_encrypt(send_string, write_key, write_Iv, encrypted_data) != true)

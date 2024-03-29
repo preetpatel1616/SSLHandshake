@@ -37,7 +37,7 @@ bool aes_encrypt(const std::string &plaintext, const std::vector<uint8_t> &key, 
   if (!ctx)
     return false;
 
-  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key.data(), iv.data()))
+  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key.data(), iv.data()))
   {
     EVP_CIPHER_CTX_free(ctx);
     return false;
@@ -77,7 +77,7 @@ bool aes_decrypt(const string &ciphertext, const std::vector<uint8_t> &key, cons
   if (!ctx)
     return false;
 
-  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key.data(), iv.data()))
+  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key.data(), iv.data()))
   {
     EVP_CIPHER_CTX_free(ctx);
     return false;
@@ -232,6 +232,27 @@ EVP_PKEY *BIGNUMs_to_EVP_PKEY_DH(const BIGNUM *p, const BIGNUM *g, const BIGNUM 
   return dh_pkey;
 }
 
+// std::vector<uint8_t> simplifiedPRF(const std::vector<uint8_t> &secret, const std::vector<uint8_t> &seed, size_t output_length)
+// {
+//   // Placeholder for the result
+//   std::vector<uint8_t> output(output_length, 0);
+
+//   // Assuming we use SHA-256 for simplicity
+//   const EVP_MD *md = EVP_sha256();
+//   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+//   unsigned int len = output_length;
+
+//   // For simplicity, let's just hash the concatenation of secret and seed
+//   EVP_DigestInit_ex(md_ctx, md, nullptr);
+//   EVP_DigestUpdate(md_ctx, secret.data(), secret.size());
+//   EVP_DigestUpdate(md_ctx, seed.data(), seed.size());
+//   EVP_DigestFinal_ex(md_ctx, output.data(), &len);
+
+//   // EVP_MD_CTX_free(md_ctx);
+
+//   return output;
+// }
+
 std::vector<uint8_t> simplifiedPRF(const std::vector<uint8_t> &secret, const std::vector<uint8_t> &seed, size_t output_length)
 {
   // Placeholder for the result
@@ -248,7 +269,7 @@ std::vector<uint8_t> simplifiedPRF(const std::vector<uint8_t> &secret, const std
   EVP_DigestUpdate(md_ctx, seed.data(), seed.size());
   EVP_DigestFinal_ex(md_ctx, output.data(), &len);
 
-  EVP_MD_CTX_free(md_ctx);
+  // EVP_MD_CTX_free(md_ctx);
 
   return output;
 }
