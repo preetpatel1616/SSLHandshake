@@ -1,0 +1,85 @@
+2024-03-29 19:35:41: SslClient object created. Client Log at 20240329-193541
+2024-03-29 19:35:41: SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.
+2024-03-29 19:35:41: SslClient:socket_connect: Client's socket fd: 4
+2024-03-29 19:35:41: SslClient:handshake:Sending clientHello.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: SslClient:send_hello:Successfully sent ClientHello message.
+2024-03-29 19:35:41: SslClient:handshake:Receiving serverHello.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: SslClient:receive_hello: ServerHello message received successfully.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: SslClient:receiveCertificate: Certificate received and verified successfully.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: Before checking the message type
+2024-03-29 19:35:42: SslClient:receiveKeyExchange: Key exchange processed successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: SslClient:receiveHelloDone: HelloDone message received successfully.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SslClient:sendKeyExchange: DHE Key Exchange sent successfully.
+2024-03-29 19:35:42: SSLClient: Successfully calculated master secret and derived session keys.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SslClient:sendFinished: Finished message sent successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: SSLClient:receiveFinished: Finished message received and verified successfully.
+2024-03-29 19:35:42: SslClient:socket_connect:Successful in establishing an SSL connection with the server.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SEND: Client write key (Hex): 6ec18d804950495766dfd596d6e91a85
+2024-03-29 19:35:42: client write iv: 
+2024-03-29 19:35:42: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 19:35:42: SslClient:socket_send_string:Successful in sending the message.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SEND: Client write key (Hex): 6ec18d804950495766dfd596d6e91a85
+2024-03-29 19:35:42: client write iv: 
+2024-03-29 19:35:42: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 19:35:42: SslClient:socket_send_string:Successful in sending the message.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SEND: Client write key (Hex): 6ec18d804950495766dfd596d6e91a85
+2024-03-29 19:35:42: client write iv: 
+2024-03-29 19:35:42: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 19:35:42: SslClient:socket_send_string:Successful in sending the message.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SslClient:send_key_refresh_request: Keys refresh request message sent successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: Before checking the message type
+2024-03-29 19:35:42: SSLClient:receiveKeyExchange: Incorrect handshake message type.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SslClient:sendKeyExchange: DHE Key Exchange sent successfully.
+2024-03-29 19:35:42: SSLClient: Successfully calculated master secret and derived session keys.
+2024-03-29 19:35:42: SslClient:handle_dhe: Successfully refreshed session keys.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: SEND: Client write key (Hex): 6ec18d804950495766dfd596d6e91a85
+2024-03-29 19:35:42: client write iv: 
+2024-03-29 19:35:42: †3þ5àòÂ¼Au».
+UW§
+2024-03-29 19:35:42: SslClient:socket_send_string:Successful in sending the message.
+2024-03-29 19:35:42: INSIDE SOCKET RECV STRING
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV STRING
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: Ssl:socket_recv_string: Message received and decrypted successfully.
+2024-03-29 19:35:42: SslClient:socket_send:Successful in sending the message.
+2024-03-29 19:35:42: SslClient:deconstructor:Socket closed successfully.
+2024-03-29 19:35:42: SslClient:deconstructor:SslClient object is being destroyed.

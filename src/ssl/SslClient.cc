@@ -1,5 +1,4 @@
 #include "SslClient.h"
-#include "../tcp/TCP.h"
 #include "crypto_adaptor.h"
 #include "../common/Logger/Logger.h"
 #include "../common/Utils/Utils.h"
@@ -39,6 +38,18 @@ SslClient::SslClient()
   supported_tls_versions.insert(TLS_1_0); // TLS 1.0
   supported_tls_versions.insert(TLS_1_1); // TLS 1.1
   supported_tls_versions.insert(TLS_1_2); // TLS 1.2
+}
+SslClient::SslClient(TCP *tcp, const SSLSharedInfo &sslSharedInfo)
+    : Ssl(tcp), sslSharedInfo(sslSharedInfo)
+{
+  if (!tcp)
+  {
+    logger_->log("TCP pointer is null in SslClient constructor.");
+  }
+  else
+  {
+    logger_->log("TCP sockfd in SslClient constructor: " + std::to_string(tcp->sockfd_));
+  }
 }
 
 SslClient::~SslClient()
@@ -699,17 +710,17 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
     return StatusCode::Error;
   }
 
-  // Assuming logger_ is accessible and SSLSharedInfo instance is named sslSharedInfo for both server and client
+  // // Assuming logger_ is accessible and SSLSharedInfo instance is named sslSharedInfo for both server and client
 
-  logger_->log("SSLSharedInfo Data\n");
-  logger_->log("Chosen TLS version: ");
-  logger_->log(std::to_string(sslSharedInfo.chosen_tls_version_));
-  logger_->log("Chosen Cipher Suite: ");
-  logger_->log(std::to_string(sslSharedInfo.chosen_cipher_suite_));
-  logger_->log("Client Random: ");
-  logger_->log(std::to_string(sslSharedInfo.client_random_));
-  logger_->log("Server Random: ");
-  logger_->log(std::to_string(sslSharedInfo.server_random_));
+  // logger_->log("SSLSharedInfo Data\n");
+  // logger_->log("Chosen TLS version: ");
+  // logger_->log(std::to_string(sslSharedInfo.chosen_tls_version_));
+  // logger_->log("Chosen Cipher Suite: ");
+  // logger_->log(std::to_string(sslSharedInfo.chosen_cipher_suite_));
+  // logger_->log("Client Random: ");
+  // logger_->log(std::to_string(sslSharedInfo.client_random_));
+  // logger_->log("Server Random: ");
+  // logger_->log(std::to_string(sslSharedInfo.server_random_));
 
   // // For BIGNUM values, you will need to convert them to a readable format
   // char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
@@ -725,16 +736,16 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
   // if (dh_g_hex)
   //   OPENSSL_free(dh_g_hex);
 
-  // Pre-master secret is binary data; for logging, convert it to hex or base64
-  std::string pre_master_secret_hex;
-  for (uint8_t byte : sslSharedInfo.pre_master_secret_)
-  {
-    char buf[3];
-    snprintf(buf, sizeof(buf), "%02x", byte);
-    pre_master_secret_hex += buf;
-  }
-  logger_->log("Pre-Master Secret (Hex): ");
-  logger_->log(pre_master_secret_hex);
+  // // Pre-master secret is binary data; for logging, convert it to hex or base64
+  // std::string pre_master_secret_hex;
+  // for (uint8_t byte : sslSharedInfo.pre_master_secret_)
+  // {
+  //   char buf[3];
+  //   snprintf(buf, sizeof(buf), "%02x", byte);
+  //   pre_master_secret_hex += buf;
+  // }
+  // logger_->log("Pre-Master Secret (Hex): ");
+  // logger_->log(pre_master_secret_hex);
 
   // Step 1: Combine client and server random values
   std::vector<uint8_t> seed(8);
@@ -757,25 +768,25 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
   sslSharedInfo.client_write_Iv_ = {134, 51, 254, 53, 224, 242, 194, 188, 65, 117, 187, 46, 10, 85, 87, 167};
   sslSharedInfo.server_write_Iv_ = {221, 161, 213, 20, 30, 206, 8, 70, 228, 102, 125, 208, 151, 1, 64, 182};
 
-  logger_->log("client write key size: ");
-  logger_->log(std::to_string(sslSharedInfo.client_write_Iv_.size()));
+  // logger_->log("client write key size: ");
+  // logger_->log(std::to_string(sslSharedInfo.client_write_Iv_.size()));
 
-  logger_->log("server write key size: ");
-  logger_->log(std::to_string(sslSharedInfo.server_write_Iv_.size()));
+  // logger_->log("server write key size: ");
+  // logger_->log(std::to_string(sslSharedInfo.server_write_Iv_.size()));
 
-  logger_->log("server seed: ");
-  std::string serverSeed(seed.begin(), seed.end());
-  logger_->log(serverSeed);
-  logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
-  logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+  // logger_->log("server seed: ");
+  // std::string serverSeed(seed.begin(), seed.end());
+  // logger_->log(serverSeed);
+  // logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+  // logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
 
-  logger_->log("client write iv: ");
-  std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
-  logger_->log(clientWriteIv);
+  // logger_->log("client write iv: ");
+  // std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
+  // logger_->log(clientWriteIv);
 
-  logger_->log("server write iv: ");
-  std::string serverWriteIv(sslSharedInfo.server_write_Iv_.begin(), sslSharedInfo.server_write_Iv_.end());
-  logger_->log(serverWriteIv);
+  // logger_->log("server write iv: ");
+  // std::string serverWriteIv(sslSharedInfo.server_write_Iv_.begin(), sslSharedInfo.server_write_Iv_.end());
+  // logger_->log(serverWriteIv);
 
   logger_->log("SSLClient: Successfully calculated master secret and derived session keys.");
   return StatusCode::Success;
@@ -784,7 +795,7 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
 StatusCode SslClient::handshake()
 {
   // 1. sending ClientHello
-  logger_->log("SslClient:handshake:Sending clientHello.");
+  logger_->log("\nSslClient:handshake: Sending clientHello.");
   StatusCode status = this->send_hello();
   if (status == StatusCode::Error)
   {
@@ -886,14 +897,14 @@ StatusCode SslClient::socket_connect(const std::string &server_ip, int server_po
   //     Perform the SSL/TLS handshake to securely negotiate encryption keys and cipher suites.
   //     Once the handshake is complete, proceed with secure data transmission.
 
+  logger_->log("SslClient:socket_connect: Attempting to establish a TCP connection with the server.");
   if (this->tcp_->socket_connect(server_ip, server_port) != StatusCode::Success)
   {
     logger_->log("SslClient:socket_connect:Error in establishing a TCP connection with the server.");
     return StatusCode::Error;
   }
 
-  logger_->log("SslClient:socket_connect:Successful in establishing a TCP connection with the server. Now attempting to complete the SSL Handshake.");
-
+  logger_->log("SslClient:socket_connect:Successful in establishing a TCP connection with the server.\nNow attempting to complete the SSL Handshake.");
   if (key_exchange_algorithm == "DHE")
   {
     this->supported_cipher_suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256);
@@ -929,6 +940,10 @@ StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tc
   if (tcpInstance == nullptr)
   {
     status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
+    logger_->log("SEND: Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+    logger_->log("client write iv: ");
+    std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
+    logger_->log(clientWriteIv);
   }
   else
   {
@@ -955,6 +970,8 @@ StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tc
 StatusCode SslClient::socket_recv_string(std::string *recv_string, TCP *tcpInstance) // sends the given string of daa over the TCP connection
 {
 
+  logger_->log("INSIDE SOCKET RECV STRING");
+
   StatusCode status;
 
   if (tcpInstance == nullptr)
@@ -964,6 +981,10 @@ StatusCode SslClient::socket_recv_string(std::string *recv_string, TCP *tcpInsta
   else
   {
     status = Ssl::socket_recv_string(recv_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, tcpInstance);
+    logger_->log("RECV: Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+    logger_->log("client write iv: ");
+    std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
+    logger_->log(clientWriteIv);
   }
 
   if (status != StatusCode::Success)

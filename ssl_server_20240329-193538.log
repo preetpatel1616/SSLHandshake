@@ -1,0 +1,43 @@
+2024-03-29 19:35:38: SslServer:constructor: SslServer object created. Server Log at 20240329-193538
+
+2024-03-29 19:35:38: SslServer:socket_listen:Starting server...
+2024-03-29 19:35:40: SslServer:socket_accept: TCP connection accepted.
+2024-03-29 19:35:40: SslServer:handshake:Receiving clientHello.
+2024-03-29 19:35:40: SslServer:receiveHello: Proceeding with DHE key exchange.
+2024-03-29 19:35:40: SslServer:sendHello: ServerHello message sent successfully.
+2024-03-29 19:35:40: SslServer:receiveHello: ClientHello message received and processed successfully.
+2024-03-29 19:35:40: SslServer:sendCertificate: Certificate sent successfully.
+2024-03-29 19:35:41: SslServer:sendKeyExchange: Before sending the record
+2024-03-29 19:35:41: Just after sending the record: 0
+2024-03-29 19:35:41: SslServer:sendKeyExchange: DHE key exchange sent successfully.
+2024-03-29 19:35:41: About to return success in send key exchange
+2024-03-29 19:35:41: SslServer:sendHelloDone: HelloDone message sent successfully.
+2024-03-29 19:35:41: DHE Key Exchange processed successfully.
+2024-03-29 19:35:41: Master secret and session keys calculated successfully for client ID: 1
+2024-03-29 19:35:41: SslServer:receiveFinished: Finished message received and verified successfully.
+2024-03-29 19:35:41: SslServer:sendFinished: Finished message sent successfully.
+2024-03-29 19:35:41: SslServer:handshake: TCP sockfd in SslClient constructor: 7
+2024-03-29 19:35:41: SslClient:socket_accept:Successful in establishing an SSL connection with the server.
+2024-03-29 19:35:41: SslServer:socket_accept: TCP connection accepted.
+2024-03-29 19:35:41: SslServer:handshake:Receiving clientHello.
+2024-03-29 19:35:41: SslServer:receiveHello: Proceeding with DHE key exchange.
+2024-03-29 19:35:41: SslServer:sendHello: ServerHello message sent successfully.
+2024-03-29 19:35:41: SslServer:receiveHello: ClientHello message received and processed successfully.
+2024-03-29 19:35:41: SslServer:sendCertificate: Certificate sent successfully.
+2024-03-29 19:35:42: SslServer:sendKeyExchange: Before sending the record
+2024-03-29 19:35:42: Just after sending the record: 0
+2024-03-29 19:35:42: SslServer:sendKeyExchange: DHE key exchange sent successfully.
+2024-03-29 19:35:42: About to return success in send key exchange
+2024-03-29 19:35:42: SslServer:sendHelloDone: HelloDone message sent successfully.
+2024-03-29 19:35:42: DHE Key Exchange processed successfully.
+2024-03-29 19:35:42: Master secret and session keys calculated successfully for client ID: 2
+2024-03-29 19:35:42: SslServer:receiveFinished: Finished message received and verified successfully.
+2024-03-29 19:35:42: SslServer:sendFinished: Finished message sent successfully.
+2024-03-29 19:35:42: SslServer:handshake: TCP sockfd in SslClient constructor: 9
+2024-03-29 19:35:42: SslClient:socket_accept:Successful in establishing an SSL connection with the server.
+2024-03-29 19:35:42: SslServer:broadcast:Attempting to securely broadcast message to all clients.
+2024-03-29 19:35:42: SslServer:receive_key_refresh_request: Not keys refresh request message
+2024-03-29 19:35:42: SslServer:sendKeyExchange: Before sending the record
+2024-03-29 19:35:42: Just after sending the record: 0
+2024-03-29 19:35:42: SslServer:sendKeyExchange: DHE key exchange sent successfully.
+2024-03-29 19:35:42: About to return success in send key exchange

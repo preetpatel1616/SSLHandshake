@@ -1,46 +1,151 @@
-2024-03-29 14:11:15: TCP:constructor:Creating TCP object with provided socket details.
-2024-03-29 14:11:15: TCP:constructor:TCP object created successfully.
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: 	
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 5
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: 4Vx
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 9
-2024-03-29 14:11:15: Sent buffer: 
-2024-03-29 14:11:15: 	
-2024-03-29 14:11:15: Sent buffer length: 
-2024-03-29 14:11:15: 14
-2024-03-29 14:11:15: Sent buffer: 
-2024-03-29 14:11:15: p0Çk0ÇS†CQ¯JÙÑYûXÀ(ÙG#ä©¶¸.0	*ÜHÜ˜
-2024-03-29 14:11:15: Sent buffer length: 
-2024-03-29 14:11:15: 885
-2024-03-29 14:11:15: Sent buffer: 
-2024-03-29 14:11:15: Â
-2024-03-29 14:11:15: Sent buffer length: 
-2024-03-29 14:11:15: 234
-2024-03-29 14:11:15: Sent buffer: 
-2024-03-29 14:11:15: 
-2024-03-29 14:11:15: Sent buffer length: 
-2024-03-29 14:11:15: 6
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: û
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 5
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: 0Åö0S	*ÜHÜ˜0FA
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 158
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: 
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 5
-2024-03-29 14:11:15: received buffer: 
-2024-03-29 14:11:15: 24úbMÂUÿıÅM»‚å
-2024-03-29 14:11:15: received buffer length: 
-2024-03-29 14:11:15: 17
-2024-03-29 14:11:15: Sent buffer: 
-2024-03-29 14:11:15: 
-2024-03-29 14:11:15: Sent buffer length: 
-2024-03-29 14:11:15: 22
+2024-03-29 19:35:40: TCP:constructor:Creating TCP object with provided socket details.
+2024-03-29 19:35:40: TCP:constructor:TCP object created successfully.
+2024-03-29 19:35:40: received buffer: 
+2024-03-29 19:35:40: 	
+2024-03-29 19:35:40: received buffer length: 
+2024-03-29 19:35:40: 5
+2024-03-29 19:35:40: received buffer: 
+2024-03-29 19:35:40: 4Vx
+2024-03-29 19:35:40: received buffer length: 
+2024-03-29 19:35:40: 9
+2024-03-29 19:35:40: Sent buffer: 
+2024-03-29 19:35:40: 	
+2024-03-29 19:35:40: Sent buffer length: 
+2024-03-29 19:35:40: 14
+2024-03-29 19:35:40: Sent buffer: 
+2024-03-29 19:35:40: p0Çk0ÇS†CQ¯JÙÑYûXÀ(ÙG#ä©¶¸.0	*ÜHÜ˜
+2024-03-29 19:35:40: Sent buffer length: 
+2024-03-29 19:35:40: 885
+2024-03-29 19:35:41: Sent buffer: 
+2024-03-29 19:35:41: Â
+2024-03-29 19:35:41: Sent buffer length: 
+2024-03-29 19:35:41: 234
+2024-03-29 19:35:41: Sent buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: Sent buffer length: 
+2024-03-29 19:35:41: 6
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: û
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 0Åö0S	*ÜHÜ˜0FA
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 158
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 8¢ÈU	Mø•Y∆‡cöò
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 17
+2024-03-29 19:35:41: Sent buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: Sent buffer length: 
+2024-03-29 19:35:41: 22
+2024-03-29 19:35:41: Ssl:constructor:Ssl object created with provided TCP connection.
+2024-03-29 19:35:41: TCP sockfd in SslClient constructor: 7
+2024-03-29 19:35:41: INSIDE SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41:  
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: Å>˜≥√A»8õïò˜Òéˆ§Å^§\Ù´±ôŒ¢
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 32
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_recv_string: Message received and decrypted successfully.
+2024-03-29 19:35:41: RECV: Client write key (Hex): 9f2b56c64ea2bfeff8a1339662d99fd3
+2024-03-29 19:35:41: client write iv: 
+2024-03-29 19:35:41: Ü3˛5‡Ú¬ºAuª.
+UWß
+2024-03-29 19:35:41: SslClient:socket_send:Successful in sending the message.
+2024-03-29 19:35:41: INSIDE SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: ˛rÏ[7≥ºAOÅU¬|%üM 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 16
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_recv_string: Message received and decrypted successfully.
+2024-03-29 19:35:41: RECV: Client write key (Hex): 9f2b56c64ea2bfeff8a1339662d99fd3
+2024-03-29 19:35:41: client write iv: 
+2024-03-29 19:35:41: Ü3˛5‡Ú¬ºAuª.
+UWß
+2024-03-29 19:35:41: SslClient:socket_send:Successful in sending the message.
+2024-03-29 19:35:41: INSIDE SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: ß1a°9'ÉÁè™¿F† 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 16
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_recv_string: Message received and decrypted successfully.
+2024-03-29 19:35:41: RECV: Client write key (Hex): 9f2b56c64ea2bfeff8a1339662d99fd3
+2024-03-29 19:35:41: client write iv: 
+2024-03-29 19:35:41: Ü3˛5‡Ú¬ºAuª.
+UWß
+2024-03-29 19:35:41: SslClient:socket_send:Successful in sending the message.
+2024-03-29 19:35:41: Sent buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: Sent buffer length: 
+2024-03-29 19:35:41: 6
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: SslClient:send_key_refresh_request: Keys refresh request message sent successfully.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: s≈P
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 1
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Before checking the message type
+2024-03-29 19:35:41: SSLClient:receiveKeyExchange: Incorrect handshake message type.
+2024-03-29 19:35:41: Failed to serialize client's DH public key to DER format.
+2024-03-29 19:35:41: SSLClient: Successfully calculated master secret and derived session keys.
+2024-03-29 19:35:41: SslClient:handle_dhe: Successfully refreshed session keys.
+2024-03-29 19:35:41: INSIDE SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV STRING
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: û
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 5
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: received buffer: 
+2024-03-29 19:35:41: 0Åö0S	*ÜHÜ˜0FA
+2024-03-29 19:35:41: received buffer length: 
+2024-03-29 19:35:41: 158
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_recv_string: Received record is not application data.
+2024-03-29 19:35:41: RECV: Client write key (Hex): 9f2b56c64ea2bfeff8a1339662d99fd3
+2024-03-29 19:35:41: client write iv: 
+2024-03-29 19:35:41: Ü3˛5‡Ú¬ºAuª.
+UWß
+2024-03-29 19:35:41: SslClient:socket_send:Failed in sending the message.

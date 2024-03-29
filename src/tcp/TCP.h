@@ -12,6 +12,7 @@ class TCP
 {
 public:
   TCP();          // constructor
+  TCP(TCP* tcp);
   virtual ~TCP(); // destructor
 
   // three are helper methods used to set up the socket
@@ -35,11 +36,15 @@ public:
 
   Logger *logger_ = nullptr; // pointer to Logger object
 
+  int sockfd_;
+
 protected:
   TCP(int sock_fd, struct sockaddr_in sock_addr, socklen_t sock_addrlen); // used internally to create a new TCP object when an incoming connection is accepted
 
+  
+
 private:
-  int sockfd_;
+  
   struct sockaddr_in sock_addr_ // 'sockaddr_in' is a structure that holds internet address information
   {
   };

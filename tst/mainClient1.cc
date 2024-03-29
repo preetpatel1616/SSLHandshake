@@ -6,13 +6,6 @@
 
 int main(int argc, char *argv[])
 {
-
-    if (!OSSL_PROVIDER_load(NULL, "default"))
-    {
-        fprintf(stderr, "Failed to load the default provider in server.\n");
-        return 1;
-    }
-
     std::string c_idx = "0";
     if (argc > 1)
     {
@@ -31,6 +24,7 @@ int main(int argc, char *argv[])
 
     addrfile >> hostname >> port;
     addrfile.close();
+    
 
     SslClient *ssl_client = new SslClient();
 
@@ -43,7 +37,34 @@ int main(int argc, char *argv[])
 
     std::cout << "\tc[" << c_idx << "]: connected" << std::endl;
 
-    if (ssl_client->socket_send_string("client says hello", nullptr) != StatusCode::Success)
+    if (ssl_client->socket_send_string("Message1 1: client says hello", nullptr) != StatusCode::Success)
+    {
+        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
+        delete ssl_client;
+        return 1;
+    }
+
+    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
+
+    if (ssl_client->socket_send_string("Message 2", nullptr) != StatusCode::Success)
+    {
+        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
+        delete ssl_client;
+        return 1;
+    }
+
+    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
+
+    if (ssl_client->socket_send_string("Message 3", nullptr) != StatusCode::Success)
+    {
+        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
+        delete ssl_client;
+        return 1;
+    }
+
+    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
+
+    if (ssl_client->socket_send_string("Message 4", nullptr) != StatusCode::Success)
     {
         std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
         delete ssl_client;
@@ -61,13 +82,6 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "\tc[" << c_idx << "]: received '" << recv_buff << "'" << std::endl;
-
-    // if (ssl_client->socket_close() != StatusCode::Success)
-    // {
-    //   std::cerr << "\tc[" << c_idx << "]: couldn't close" << std::endl;
-    //   delete ssl_client;
-    //   return 1;
-    // }
 
     std::cout << "\tc[" << c_idx << "]: closed" << std::endl;
 

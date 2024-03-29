@@ -1,14 +1,15 @@
 #ifndef SSL_H
 #define SSL_H
 
+#include "../common/Logger/Logger.h" // Logging support
+#include "../tcp/TCP.h"              // TCP communication support
+#include "../common/StatusCodes.h"   // Common status codes for error handling
+
 #include <string>
 #include <vector>
-#include "../common/Logger/Logger.h"
-#include "../tcp/TCP.h"
-#include <openssl/bn.h>
-#include <openssl/x509.h>
-#include "../common/StatusCodes.h"
-#include <stdint.h>
+#include <openssl/bn.h>   // OpenSSL big number for cryptographic calculations
+#include <openssl/x509.h> // OpenSSL X.509 for certificate handling
+#include <stdint.h>       // Standard integer types
 
 class TCP;
 class Logger;
@@ -44,8 +45,7 @@ public:
   static const uint16_t TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256;
   static const uint16_t TLS_RSA_WITH_AES_128_CBC_SHA_256;
 
-  // ClientHello structure
-
+  // ClientHello structure for initiating communication
   struct ClientHello
   {
     uint16_t tls_negotiate_version_;      // The highest TLS version supported by the client
@@ -53,8 +53,7 @@ public:
     std::vector<uint16_t> cipher_suites_; // List of supported cipher suites
   };
 
-  // ServerHello structure
-
+  // ServerHello structure for responding to the client
   struct ServerHello
   {
     uint16_t chosen_tls_version_; // The highest TLS version supported by the client
@@ -62,9 +61,9 @@ public:
     uint16_t chosen_cipher_suite_;
   };
 
-  // RecordHeader structure
-  struct RecordHeader // Metadata of the record like
-  {
+  // RecordHeader and Record structures for encapsulating messages
+  struct RecordHeader
+  {                       // Metadata of the record
     uint8_t record_type;  // record type
     uint16_t tls_version; // TLS version
     uint16_t data_size;   // size of the encrypted data
@@ -78,7 +77,6 @@ public:
   };
 
   // SSLSharedInfo structure holds shared information between client and server
-
   struct SSLSharedInfo
   {
     uint16_t chosen_tls_version_;
@@ -113,9 +111,10 @@ public:
   };
 
   Ssl();
-  explicit Ssl(TCP *tcp);
+  Ssl(TCP *tcp);
   virtual ~Ssl();
 
+  // Utility methods for hostname and port
   std::string get_hostname() const;
   int get_port() const;
 
@@ -127,6 +126,7 @@ public:
   virtual StatusCode socket_send_record(const Record &send_record, TCP *tcpInstance);
   virtual StatusCode socket_recv_record(Record *recv_record, TCP *tcpInstance);
   TCP *tcp_; // a pointer to a TCP object
+  
 protected:
   Logger *logger_ = nullptr; // a pointer to a Logger object
   EVP_PKEY *dhKeyPair = nullptr;

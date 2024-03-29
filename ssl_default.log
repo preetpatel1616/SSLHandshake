@@ -1,14 +1,44 @@
-2024-03-29 14:11:13: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-29 14:11:15: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-29 14:11:15: Ssl:socket_recv_record: Record received successfully.
-2024-03-29 14:11:15: Ssl:socket_send_record:Record sent successfully.
-2024-03-29 14:11:15: Ssl:socket_send_record:Record sent successfully.
-2024-03-29 14:11:15: Ssl:socket_send_record:Record sent successfully.
-2024-03-29 14:11:15: Ssl:socket_send_record:Record sent successfully.
-2024-03-29 14:11:15: Ssl:socket_recv_record: Record received successfully.
-2024-03-29 14:11:15: Ssl:socket_recv_record: Record received successfully.
-2024-03-29 14:11:15: Ssl:socket_send_record:Record sent successfully.
-2024-03-29 14:11:15: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-29 14:11:15: Ssl::socket_recv_record: Couldn't receive header.
-2024-03-29 14:11:15: Ssl:socket_recv_string:Failed to receive record.
-2024-03-29 14:11:15: SslClient:socket_send:Failed in sending the message.
+2024-03-29 19:35:38: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 19:35:40: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 19:35:40: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:40: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:40: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:40: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:40: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:40: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 19:35:41: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:41: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:41: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:41: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:41: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD
+2024-03-29 19:35:42: AFTER RECEVIING SSL RECORD
+2024-03-29 19:35:42: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 19:35:42: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 19:35:42: INSIDE SSL SOCKET RECV RECORD
+2024-03-29 19:35:42: BEFORE RECEIVING SSL RECORD

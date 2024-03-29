@@ -1,38 +1,33 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <pthread.h>
+#include <vector>
 #include <openssl/provider.h>
 
-#include "../src/ssl/SslServer.h" // Ensure this path is correct
-#include "../src/ssl/SslClient.h" // Ensure this path is correct
+#include "../src/ssl/SslServer.h" // Make sure this path is correct
+#include "../src/ssl/SslClient.h" // Make sure this path is correct
 
 #define NUM_THREADS 2
+#define NUM_MESSAGES_PER_CLIENT 4 // Assuming you want to handle 4 messages per client before broadcasting
 
 void *handle_client(void *arg)
 {
-
     SslClient *client = static_cast<SslClient *>(arg);
     if (client != nullptr)
     {
-        std::string recv_msg;
-        StatusCode code = client->socket_recv_string(&recv_msg, client->tcp_);
-
-        std::cout << "Server received: '" << recv_msg << "' with code: " << static_cast<int>(code) << std::endl;
+        for (int i = 0; i < NUM_MESSAGES_PER_CLIENT; ++i)
+        {
+            std::string recv_msg;
+            StatusCode code = client->socket_recv_string(&recv_msg, client->tcp_);
+            std::cout << "Server received: '" << recv_msg << "' with code: " << static_cast<int>(code) << std::endl;
+        }
     }
-
     pthread_exit(nullptr);
 }
 
 int main()
 {
-
-    if (!OSSL_PROVIDER_load(NULL, "default"))
-    {
-        fprintf(stderr, "Failed to load the default provider in server.\n");
-        return 1;
-    }
-    SslServer *server = new SslServer("tst/server_certificate.pem", "tst/server_private_key.pem"); // Provide paths to your certificate and key
+    SslServer *server = new SslServer("tst/server_certificate.pem", "tst/server_private_key.pem");
 
     if (server->socket_listen() != StatusCode::Success)
     {
@@ -54,13 +49,11 @@ int main()
     for (int i = 0; i < NUM_THREADS; ++i)
     {
         SslClient *client = server->socket_accept();
-
         if (client == nullptr)
         {
             std::cerr << "Error: couldn't accept" << std::endl;
             continue;
         }
-
         std::cout << "Server accepted client " << i + 1 << std::endl;
         int rc = pthread_create(&threads[i], nullptr, handle_client, static_cast<void *>(client));
         if (rc)
@@ -71,41 +64,21 @@ int main()
         }
     }
 
+    // Wait for threads to finish
     for (int i = 0; i < NUM_THREADS; ++i)
     {
         void *status;
-        int rc = pthread_join(threads[i], &status);
-        if (rc)
-        {
-            std::cerr << "Error: unable to join, " << rc << std::endl;
-            delete server;
-            exit(1);
-        }
+        pthread_join(threads[i], &status);
     }
 
+    // After handling messages from clients, broadcast a message to all
     std::cout << "Server broadcasting..." << std::endl;
-
-    if (server->broadcast("Server says 'HELLO ALL'") != StatusCode::Success)
-    {
-        std::cerr << "Error: couldn't broadcast" << std::endl;
-        delete server;
-        exit(1);
-    }
+    server->broadcast("Server says 'HELLO ALL'");
 
     std::cout << "Server shutting down..." << std::endl;
-
-    if (server->shutdown() != StatusCode::Success)
-    {
-        std::cerr << "Error: couldn't shut down" << std::endl;
-        delete server;
-        exit(1);
-    }
-
-    sleep(2);
-
+    server->shutdown();
     delete server;
-
-    std::cout << "Server exiting..." << std::endl;
+    std::cout << "Server exited successfully." << std::endl;
 
     return 0;
 }

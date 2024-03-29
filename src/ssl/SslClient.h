@@ -10,6 +10,7 @@
 #include <set>
 #include <openssl/bn.h>
 #include <openssl/x509.h>
+#include <iostream>
 
 class SslClient : public Ssl
 {
@@ -22,8 +23,9 @@ private:
 public:
   SSLSharedInfo sslSharedInfo;
   SslClient();
-  SslClient(const SSLSharedInfo &sslSharedInfo)
-      : sslSharedInfo(sslSharedInfo) {}
+  SslClient(TCP *tcp, const SSLSharedInfo &sslSharedInfo);
+  // SslClient(const SSLSharedInfo &sslSharedInfo):
+  // sslSharedInfo(sslSharedInfo){}
   ~SslClient();
 
   unsigned int messageCounter = 0;
@@ -31,16 +33,16 @@ public:
 
   // For sending and receiving raw string data (application data)
 
-virtual StatusCode socket_send_string(const std::string &send_string, TCP* tcpInstance);
-  virtual StatusCode socket_recv_string(std::string *recv_string, TCP* tcpInstance);
+  virtual StatusCode socket_send_string(const std::string &send_string, TCP *tcpInstance);
+  virtual StatusCode socket_recv_string(std::string *recv_string, TCP *tcpInstance);
 
   StatusCode socket_connect(const std::string &server_ip, int server_port, std::string key_exchange_algorithm);
   void handle_dhe();
   StatusCode send_key_refresh_request();
 
-      // Handshake methods
-      StatusCode
-      send_hello();
+  // Handshake methods
+  StatusCode
+  send_hello();
   StatusCode receive_hello();
   StatusCode receive_certificate();
   StatusCode receive_key_exchange();
