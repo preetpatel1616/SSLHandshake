@@ -6,14 +6,6 @@
 #include <vector>
 
 //////////////////////////////////////////////
-// DHE
-int generate_dh_parameters(SSL_CTX *ctx);
-
-//////////////////////////////////////////////
-// RSA
-// int generate_rsa_keys(CryptoPP::RSA::PrivateKey &private_key, CryptoPP::RSA::PublicKey &public_key);
-
-//////////////////////////////////////////////
 // Encryption
 bool aes_encrypt(const std::string &plaintext, const std::vector<uint8_t> &key, const std::vector<uint8_t> &iv, std::string &ciphertext);
 
@@ -24,7 +16,7 @@ bool aes_decrypt(const std::string &ciphertext, const std::vector<uint8_t> &key,
 
 // int rsa_decrypt(const CryptoPP::RSA::PrivateKey &priv_key,
 //                 std::string *plain_text, const std::string &cipher_text);
-uint32_t generate_random_number();
+uint32_t generate_random_uint32();
 
 void append_BN_to_vector(const BIGNUM *bn, std::vector<uint8_t> &vec);
 std::vector<uint8_t> BIGNUM_to_vector(const BIGNUM *bn);

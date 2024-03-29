@@ -154,8 +154,8 @@ StatusCode SslServer::receive_hello(int client_id, SSLSharedInfo &sslSharedInfo)
   // 2.2 deserialize random
   clientHello.random_ = 0;
   for (int i = 0; i < 4; ++i)
-  { // Assuming random is 4 bytes
-    clientHello.random_ = static_cast<uint32_t>(recv_record.data[index] << 8) | (recv_record.data[index + i]);
+  {
+    clientHello.random_ |= static_cast<uint32_t>(recv_record.data[index + i]) << ((3 - i) * 8);
   }
   index += sizeof(clientHello.random_);
 
@@ -252,7 +252,8 @@ StatusCode SslServer::send_hello(int client_id, const std::string key_exchange_a
   // Construct ServerHello
   ServerHello serverHello;
   serverHello.chosen_tls_version_ = sslSharedInfo.chosen_tls_version_;
-  serverHello.random_ = generate_random_number(); // Implement this function to generate a random number
+  // serverHello.random_ = generate_random_uint32(); // Implement this function to generate a random number
+  serverHello.random_ = 0x87654321;
   if (key_exchange_algorithm == "DHE")
   {
     serverHello.chosen_cipher_suite_ = TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256;
@@ -553,7 +554,6 @@ StatusCode SslServer::send_key_exchange(int client_id, SSLSharedInfo &sslSharedI
 
 StatusCode SslServer::send_hello_done(int client_id, SSLSharedInfo &sslSharedInfo)
 {
-  logger_->log("Flag 12");
   if (this->closed_)
   {
     logger_->log("SslServer:sendHelloDone: Server is closed, cannot send HelloDone.");
@@ -701,35 +701,39 @@ StatusCode SslServer::receive_key_exchange(int client_id, SSLSharedInfo &sslShar
       return StatusCode::Error;
     }
 
-    RSA *rsa = EVP_PKEY_get1_RSA(pkey);
-    if (!rsa)
+    // Initialize the decryption operation using the server's private key
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, nullptr);
+    if (!ctx || EVP_PKEY_decrypt_init(ctx) <= 0)
     {
-      logger_->log("SslServer:receiveKeyExchangeRSA: Failed to get RSA key.");
+      logger_->log("SslServer:receiveKeyExchangeRSA: Failed to initialize decryption context.");
+      if (ctx)
+        EVP_PKEY_CTX_free(ctx);
       return StatusCode::Error;
     }
 
-    // Decrypt the pre-master secret
-    std::vector<unsigned char> decryptedPreMasterSecret(RSA_size(rsa));
-    int decryptedLen = RSA_private_decrypt(
-        recv_record.hdr.data_size - 1,                           // Subtract 1 for the message type
-        reinterpret_cast<unsigned char *>(recv_record.data) + 1, // Skip the message type byte
-        decryptedPreMasterSecret.data(),
-        rsa,
-        RSA_PKCS1_PADDING);
-
-    if (decryptedLen == -1)
+    // Determine buffer size for decrypted pre-master secret
+    size_t decryptedLen = 0;
+    if (EVP_PKEY_decrypt(ctx, nullptr, &decryptedLen,
+                         reinterpret_cast<unsigned char *>(recv_record.data) + 1, recv_record.hdr.data_size - 1) <= 0)
     {
-      char buffer[120];
-      ERR_error_string_n(ERR_get_error(), buffer, sizeof(buffer));
-      logger_->log(std::string("SslServer:receiveKeyExchangeRSA: Failed to decrypt pre-master secret. Error: ") + buffer);
-      RSA_free(rsa);
+      logger_->log("SslServer:receiveKeyExchangeRSA: Failed to determine decrypted pre-master secret length.");
+      EVP_PKEY_CTX_free(ctx);
+      return StatusCode::Error;
+    }
+
+    std::vector<unsigned char> decryptedPreMasterSecret(decryptedLen);
+    if (EVP_PKEY_decrypt(ctx, decryptedPreMasterSecret.data(), &decryptedLen,
+                         reinterpret_cast<unsigned char *>(recv_record.data) + 1, recv_record.hdr.data_size - 1) <= 0)
+    {
+      logger_->log("SslServer:receiveKeyExchangeRSA: Failed to decrypt pre-master secret.");
+      EVP_PKEY_CTX_free(ctx);
       return StatusCode::Error;
     }
 
     sslSharedInfo.pre_master_secret_.assign(decryptedPreMasterSecret.begin(), decryptedPreMasterSecret.begin() + decryptedLen);
     logger_->log("SslServer:receiveKeyExchangeRSA: Pre-master secret decrypted successfully.");
 
-    RSA_free(rsa); // Free the RSA structure
+    EVP_PKEY_CTX_free(ctx); // Free the decryption context
   }
 
   logger_->log("SslServer:receiveKeyExchange: Key exchange successfully processed.");
@@ -849,19 +853,19 @@ StatusCode SslServer::calculate_master_secret_and_session_keys(int client_id, SS
   logger_->log("Server Random: ");
   logger_->log(std::to_string(sslSharedInfo.server_random_));
 
-  // For BIGNUM values, you will need to convert them to a readable format
-  char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
-  char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
-  logger_->log("DH Parameter p: ");
-  logger_->log(dh_p_hex ? dh_p_hex : "null");
-  logger_->log("DH Parameter g: ");
-  logger_->log(dh_g_hex ? dh_g_hex : "null");
+  // // For BIGNUM values, you will need to convert them to a readable format
+  // char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
+  // char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
+  // logger_->log("DH Parameter p: ");
+  // logger_->log(dh_p_hex ? dh_p_hex : "null");
+  // logger_->log("DH Parameter g: ");
+  // logger_->log(dh_g_hex ? dh_g_hex : "null");
 
-  // Free the allocated hex strings to prevent memory leaks
-  if (dh_p_hex)
-    OPENSSL_free(dh_p_hex);
-  if (dh_g_hex)
-    OPENSSL_free(dh_g_hex);
+  // // Free the allocated hex strings to prevent memory leaks
+  // if (dh_p_hex)
+  //   OPENSSL_free(dh_p_hex);
+  // if (dh_g_hex)
+  //   OPENSSL_free(dh_g_hex);
 
   // Pre-master secret is binary data; for logging, convert it to hex or base64
   std::string pre_master_secret_hex;
@@ -961,7 +965,7 @@ SslClient *SslServer::handshake(int client_id)
   if (status == StatusCode::Error)
     return nullptr;
   // 5. send done message
- 
+
   status = this->send_hello_done(client_id, sslSharedInfo); // waiting for clientHello message
   if (status == StatusCode::Error)
     return nullptr;

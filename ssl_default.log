@@ -1,14 +1,14 @@
-2024-03-28 23:34:10: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-28 23:34:12: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-28 23:34:12: Ssl:socket_recv_record: Record received successfully.
-2024-03-28 23:34:12: Ssl:socket_send_record:Record sent successfully.
-2024-03-28 23:34:12: Ssl:socket_send_record:Record sent successfully.
-2024-03-28 23:34:12: Ssl:socket_send_record:Record sent successfully.
-2024-03-28 23:34:12: Ssl:socket_send_record:Record sent successfully.
-2024-03-28 23:34:12: Ssl:socket_recv_record: Record received successfully.
-2024-03-28 23:34:12: Ssl:socket_recv_record: Record received successfully.
-2024-03-28 23:34:12: Ssl:socket_send_record:Record sent successfully.
-2024-03-28 23:34:12: Ssl:constructor:Ssl object created with default TCP connection.
-2024-03-28 23:34:12: Ssl::socket_recv_record: Couldn't receive header.
-2024-03-28 23:34:12: Ssl:socket_recv_string:Failed to receive record.
-2024-03-28 23:34:12: SslClient:socket_send:Failed in sending the message.
+2024-03-29 05:51:09: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 05:51:11: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 05:51:11: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 05:51:11: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 05:51:11: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 05:51:11: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 05:51:11: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 05:51:11: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 05:51:11: Ssl:socket_recv_record: Record received successfully.
+2024-03-29 05:51:11: Ssl:socket_send_record:Record sent successfully.
+2024-03-29 05:51:11: Ssl:constructor:Ssl object created with default TCP connection.
+2024-03-29 05:51:11: Ssl::socket_recv_record: Couldn't receive header.
+2024-03-29 05:51:11: Ssl:socket_recv_string:Failed to receive record.
+2024-03-29 05:51:11: SslClient:socket_send:Failed in sending the message.

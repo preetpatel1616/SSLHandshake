@@ -17,6 +17,8 @@
 #include <openssl/param_build.h>
 #include <openssl/core_names.h>
 #include <cstring>
+#include <random>
+#include <cstdint>
 
 using namespace std;
 
@@ -83,7 +85,8 @@ StatusCode SslClient::send_hello()
   ClientHello clientHello;
   clientHello.tls_negotiate_version_ = *supported_tls_versions.rbegin();
 
-  clientHello.random_ = generate_random_number();
+  // clientHello.random_ = generate_random_uint32();
+  clientHello.random_ = 0x12345678;
   clientHello.cipher_suites_ = supported_cipher_suites;
 
   // logger_->log("SslClient:send_hello: ClientHello Data\n");
@@ -135,17 +138,6 @@ StatusCode SslClient::send_hello()
   record.hdr.tls_version = TLS_1_2;
   record.hdr.data_size = static_cast<uint16_t>(buffer_size);
   record.data = serializedClientHello;
-
-  // string clientHelloData = "HI this is client hello";
-
-  // char *data = (char *)malloc(clientHelloData.length() * sizeof(char));
-  // memcpy(data, clientHelloData.c_str(), clientHelloData.length());
-  // record.data = data;
-
-  // // // add length to record
-  // record.hdr.data_size = clientHelloData.length();
-
-  // 4. serialize the record and send it
 
   StatusCode status = Ssl::socket_send_record(record, nullptr);
 
@@ -201,8 +193,8 @@ StatusCode SslClient::receive_hello()
   // 2.2 deserialize random
   serverHello.random_ = 0;
   for (int i = 0; i < 4; ++i)
-  { // Assuming random is 4 bytes
-    serverHello.random_ = static_cast<uint32_t>(recv_record.data[index] << 8) | (recv_record.data[index + i]);
+  {
+    serverHello.random_ |= static_cast<uint32_t>(recv_record.data[index + i]) << ((3 - i) * 8);
   }
   index += sizeof(serverHello.random_);
 
@@ -527,18 +519,61 @@ StatusCode SslClient::send_key_exchange()
   }
   else if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_RSA_WITH_AES_128_CBC_SHA_256)
   {
+    // Example for TLS 1.2
+    // First two bytes are the version number, followed by 46 random bytes
+    const size_t pre_master_secret_length = 48;
+    std::vector<uint8_t> pre_master_secret(pre_master_secret_length);
+
+    // Set the first two bytes to the TLS version (for TLS 1.2, 0x0303)
+    pre_master_secret[0] = 0x03;
+    pre_master_secret[1] = 0x03;
+
+    // Generate 46 random bytes for the rest of the pre-master secret
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+    for (size_t i = 2; i < pre_master_secret_length; ++i)
+    {
+      pre_master_secret[i] = dis(gen);
+    }
+
+    // Store the generated pre-master secret
+    this->sslSharedInfo.pre_master_secret_ = pre_master_secret;
+
     // RSA Key Exchange: Encrypt pre-master secret with server's public RSA key and send
-    // Assume pre_master_secret has been generated and stored in sslSession
     EVP_PKEY *pubkey = X509_get_pubkey(this->sslSharedInfo.server_certificate_);
-    RSA *rsa = EVP_PKEY_get1_RSA(pubkey);
+    if (!pubkey)
+    {
+      logger_->log("SslClient:sendKeyExchange: Failed to get public key from server certificate.");
+      return StatusCode::Error;
+    }
 
-    std::vector<unsigned char> encryptedPreMasterSecret(RSA_size(rsa));
-    int len = RSA_public_encrypt(this->sslSharedInfo.pre_master_secret_.size(), this->sslSharedInfo.pre_master_secret_.data(), encryptedPreMasterSecret.data(), rsa, RSA_PKCS1_PADDING);
+    // Create a context for the encryption operation
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pubkey, nullptr);
+    if (!ctx || EVP_PKEY_encrypt_init(ctx) <= 0)
+    {
+      logger_->log("SslClient:sendKeyExchange: Encryption context initialization failed.");
+      EVP_PKEY_free(pubkey);
+      if (ctx)
+        EVP_PKEY_CTX_free(ctx);
+      return StatusCode::Error;
+    }
 
-    if (len == -1)
+    // Determine buffer size for encrypted pre-master secret
+    size_t encryptedPreMasterSecretLen = 0;
+    if (EVP_PKEY_encrypt(ctx, nullptr, &encryptedPreMasterSecretLen, this->sslSharedInfo.pre_master_secret_.data(), this->sslSharedInfo.pre_master_secret_.size()) <= 0)
+    {
+      logger_->log("SslClient:sendKeyExchange: Failed to determine buffer size for encrypted pre-master secret.");
+      EVP_PKEY_CTX_free(ctx);
+      EVP_PKEY_free(pubkey);
+      return StatusCode::Error;
+    }
+
+    std::vector<unsigned char> encryptedPreMasterSecret(encryptedPreMasterSecretLen);
+    if (EVP_PKEY_encrypt(ctx, encryptedPreMasterSecret.data(), &encryptedPreMasterSecretLen, this->sslSharedInfo.pre_master_secret_.data(), this->sslSharedInfo.pre_master_secret_.size()) <= 0)
     {
       logger_->log("SslClient:sendKeyExchange: Encryption of pre-master secret failed.");
-      RSA_free(rsa);
+      EVP_PKEY_CTX_free(ctx);
       EVP_PKEY_free(pubkey);
       return StatusCode::Error;
     }
@@ -561,12 +596,12 @@ StatusCode SslClient::send_key_exchange()
     if (status != StatusCode::Success)
     {
       logger_->log("SslClient:sendKeyExchange: Failed to send RSA Key Exchange.");
-      RSA_free(rsa);
+      EVP_PKEY_CTX_free(ctx);
       EVP_PKEY_free(pubkey);
       return status;
     }
     logger_->log("SslClient:sendKeyExchange: RSA Key Exchange sent successfully.");
-    RSA_free(rsa);
+    EVP_PKEY_CTX_free(ctx);
     EVP_PKEY_free(pubkey);
   }
 
@@ -699,19 +734,19 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
   logger_->log("Server Random: ");
   logger_->log(std::to_string(sslSharedInfo.server_random_));
 
-  // For BIGNUM values, you will need to convert them to a readable format
-  char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
-  char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
-  logger_->log("DH Parameter p: ");
-  logger_->log(dh_p_hex ? dh_p_hex : "null");
-  logger_->log("DH Parameter g: ");
-  logger_->log(dh_g_hex ? dh_g_hex : "null");
+  // // For BIGNUM values, you will need to convert them to a readable format
+  // char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
+  // char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
+  // logger_->log("DH Parameter p: ");
+  // logger_->log(dh_p_hex ? dh_p_hex : "null");
+  // logger_->log("DH Parameter g: ");
+  // logger_->log(dh_g_hex ? dh_g_hex : "null");
 
-  // Free the allocated hex strings to prevent memory leaks
-  if (dh_p_hex)
-    OPENSSL_free(dh_p_hex);
-  if (dh_g_hex)
-    OPENSSL_free(dh_g_hex);
+  // // Free the allocated hex strings to prevent memory leaks
+  // if (dh_p_hex)
+  //   OPENSSL_free(dh_p_hex);
+  // if (dh_g_hex)
+  //   OPENSSL_free(dh_g_hex);
 
   // Pre-master secret is binary data; for logging, convert it to hex or base64
   std::string pre_master_secret_hex;
@@ -756,7 +791,6 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
   logger_->log(serverSeed);
   logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
   logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
-
 
   logger_->log("client write iv: ");
   std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());

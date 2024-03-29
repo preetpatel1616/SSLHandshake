@@ -112,7 +112,7 @@ bool aes_decrypt(const string &ciphertext, const std::vector<uint8_t> &key, cons
   return true;
 }
 
-uint32_t generate_random_number()
+uint32_t generate_random_uint32()
 {
   std::vector<unsigned char> random_data(sizeof(uint32_t)); // sizeof(uint32_t) is typically 4 bytes
   int rc = RAND_bytes(random_data.data(), random_data.size());
@@ -129,7 +129,7 @@ uint32_t generate_random_number()
     result |= static_cast<uint32_t>(random_data[i]) << (8 * i);
   }
 
-  return result;
+  return uint32_t(result);
 }
 
 void append_BN_to_vector(const BIGNUM *bn, std::vector<uint8_t> &vec)
@@ -232,26 +232,6 @@ EVP_PKEY *BIGNUMs_to_EVP_PKEY_DH(const BIGNUM *p, const BIGNUM *g, const BIGNUM 
   return dh_pkey;
 }
 
-// std::vector<uint8_t> simplifiedPRF(const std::vector<uint8_t> &secret, const std::vector<uint8_t> &seed, size_t output_length)
-// {
-//   // Placeholder for the result
-//   std::vector<uint8_t> output(output_length, 0);
-
-//   // Assuming we use SHA-256 for simplicity
-//   const EVP_MD *md = EVP_sha256();
-//   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
-//   unsigned int len = output_length;
-
-//   // For simplicity, let's just hash the concatenation of secret and seed
-//   EVP_DigestInit_ex(md_ctx, md, nullptr);
-//   EVP_DigestUpdate(md_ctx, secret.data(), secret.size());
-//   EVP_DigestUpdate(md_ctx, seed.data(), seed.size());
-//   EVP_DigestFinal_ex(md_ctx, output.data(), &len);
-
-//   // EVP_MD_CTX_free(md_ctx);
-
-//   return output;
-// }
 
 std::vector<uint8_t> simplifiedPRF(const std::vector<uint8_t> &secret, const std::vector<uint8_t> &seed, size_t output_length)
 {

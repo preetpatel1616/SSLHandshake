@@ -25,7 +25,9 @@ public:
   SslClient(const SSLSharedInfo &sslSharedInfo)
       : sslSharedInfo(sslSharedInfo) {}
   ~SslClient();
- 
+
+  unsigned int messageCounter = 0;
+  const unsigned int MESSAGE_THRESHOLD = 5;
 
   // For sending and receiving raw string data (application data)
   virtual StatusCode socket_send_string(const std::string &send_string);

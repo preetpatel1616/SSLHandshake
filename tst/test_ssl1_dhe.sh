@@ -42,6 +42,6 @@ sleep 1
 # # Allow some time for messages to be exchanged
 # sleep 8
 
-# Kill the server and client processes if any are left
-pkill -f $SERVER_PATH || true
-pkill -f $CLIENT_PATH || true
+# # Kill the server and client processes if any are left
+# pkill -f $SERVER_PATH || true
+# pkill -f $CLIENT_PATH || true
