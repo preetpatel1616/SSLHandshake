@@ -1,26 +1,42 @@
-2024-03-28 19:20:06: TCP:constructor:Creating TCP object with provided socket details.
-2024-03-28 19:20:06: TCP:constructor:TCP object created successfully.
-2024-03-28 19:20:06: received buffer: 
-2024-03-28 19:20:06: 	
-2024-03-28 19:20:06: received buffer length: 
-2024-03-28 19:20:06: 5
-2024-03-28 19:20:06: received buffer: 
-2024-03-28 19:20:06: ÁÖU>
-2024-03-28 19:20:06: received buffer length: 
-2024-03-28 19:20:06: 9
-2024-03-28 19:20:06: Sent buffer: 
-2024-03-28 19:20:06: 	
-2024-03-28 19:20:06: Sent buffer length: 
-2024-03-28 19:20:06: 14
-2024-03-28 19:20:06: Sent buffer: 
-2024-03-28 19:20:06: p0‚k0‚S CQøJô„YžXË(ôG#Š©¦ü.0	*†H†÷
-2024-03-28 19:20:06: Sent buffer length: 
-2024-03-28 19:20:06: 885
-2024-03-28 19:20:06: Sent buffer: 
-2024-03-28 19:20:06: ˆ
-2024-03-28 19:20:06: Sent buffer length: 
-2024-03-28 19:20:06: 141
-2024-03-28 19:20:06: Sent buffer: 
-2024-03-28 19:20:06: 
-2024-03-28 19:20:06: Sent buffer length: 
-2024-03-28 19:20:06: 6
+2024-03-28 22:05:31: TCP:constructor:Creating TCP object with provided socket details.
+2024-03-28 22:05:31: TCP:constructor:TCP object created successfully.
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: 	
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 5
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: Ú¹J¯
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 9
+2024-03-28 22:05:31: Sent buffer: 
+2024-03-28 22:05:31: 	
+2024-03-28 22:05:31: Sent buffer length: 
+2024-03-28 22:05:31: 14
+2024-03-28 22:05:31: Sent buffer: 
+2024-03-28 22:05:31: p0‚k0‚S CQøJô„YžXË(ôG#Š©¦ü.0	*†H†÷
+2024-03-28 22:05:31: Sent buffer length: 
+2024-03-28 22:05:31: 885
+2024-03-28 22:05:31: Sent buffer: 
+2024-03-28 22:05:31: å
+2024-03-28 22:05:31: Sent buffer length: 
+2024-03-28 22:05:31: 234
+2024-03-28 22:05:31: Sent buffer: 
+2024-03-28 22:05:31: 
+2024-03-28 22:05:31: Sent buffer length: 
+2024-03-28 22:05:31: 6
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: ž
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 5
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: 0š0S	*†H†÷0FA
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 158
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: 
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 5
+2024-03-28 22:05:31: received buffer: 
+2024-03-28 22:05:31: P¯Ô¬Ë´â4au>øÕ
+2024-03-28 22:05:31: received buffer length: 
+2024-03-28 22:05:31: 17

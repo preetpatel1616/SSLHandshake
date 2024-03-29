@@ -35,8 +35,8 @@ const uint8_t Ssl::HS_CLIENT_KEY_EXCHANGE = 0x10;
 const uint8_t Ssl::HS_FINISHED = 0x14;
 
 // ciphersuites
-const uint16_t Ssl::TLS_DHE_RSA_WITH_AES_128_CBC_SHA = 0x0033;
-const uint16_t Ssl::TLS_RSA_WITH_AES_128_CBC_SHA = 0x002F;
+const uint16_t Ssl::TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256 = 0x0033;
+const uint16_t Ssl::TLS_RSA_WITH_AES_128_CBC_SHA_256 = 0x002F;
 
 Ssl::Ssl()
 {
@@ -109,7 +109,7 @@ int Ssl::get_port() const
 // strings: send, recv
 // returns 0 on success, -1 otherwise
 
-StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP* tcpInstance)
+StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance)
 { // meant to be used after the handshake is established
 
   if (!tcp_)
@@ -153,7 +153,7 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
 
   // send
   StatusCode status = socket_send_record(send_record, tcpInstance); // calls the 'send' function that takes a 'Record' object and sends the encrypted data
-  delete[] send_record.data;                           // After sending the Record, you free the memory allocated for the data to prevent memory leaks. This is an essential step since you allocated memory dynamically for data.
+  delete[] send_record.data;                                        // After sending the Record, you free the memory allocated for the data to prevent memory leaks. This is an essential step since you allocated memory dynamically for data.
 
   return status;
 }
@@ -202,7 +202,7 @@ StatusCode Ssl::socket_recv_string(std::string *recv_string, std::vector<uint8_t
 // records: send, recv
 // returns 0 on success, -1 otherwise
 
-StatusCode Ssl::socket_send_record(const Record &send_record, TCP* tcpInstance)
+StatusCode Ssl::socket_send_record(const Record &send_record, TCP *tcpInstance)
 {
   if (!tcp_)
   {
@@ -210,7 +210,8 @@ StatusCode Ssl::socket_send_record(const Record &send_record, TCP* tcpInstance)
     return StatusCode::Error;
   }
 
-  if(tcpInstance == nullptr){
+  if (tcpInstance == nullptr)
+  {
     tcpInstance = tcp_;
   }
 
@@ -253,7 +254,7 @@ StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
 
   // receiving header
 
-  char *header = (char *)malloc(5*sizeof(char));
+  char *header = (char *)malloc(5 * sizeof(char));
   if (tcpInstance->socket_recv_buffer(header, 5) != 5)
   {
     this->logger_->log("Ssl::socket_recv_record: Couldn't receive header.");

@@ -40,8 +40,8 @@ public:
   static const uint16_t TLS_1_2; // 1.2
 
   // Cipher suites
-  static const uint16_t TLS_DHE_RSA_WITH_AES_128_CBC_SHA;
-  static const uint16_t TLS_RSA_WITH_AES_128_CBC_SHA;
+  static const uint16_t TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256;
+  static const uint16_t TLS_RSA_WITH_AES_128_CBC_SHA_256;
 
   // ClientHello structure
 
@@ -85,8 +85,6 @@ public:
     uint32_t client_random_;
     uint32_t server_random_;
     X509 *server_certificate_ = nullptr;
-    std::vector<uint8_t> client_dh_public_key_;
-    std::vector<uint8_t> server_dh_public_key_;
     BIGNUM *dh_p_ = nullptr; // DH parameter p
     BIGNUM *dh_g_ = nullptr; // DH parameter g
     std::vector<uint8_t> pre_master_secret_;
@@ -101,18 +99,6 @@ public:
           client_random_(0), server_random_(0),
           server_certificate_(nullptr),
           dh_p_(nullptr), dh_g_(nullptr) {}
-
-    SSLSharedInfo(uint16_t chosen_tls_version, uint16_t chosen_cipher_suite, uint32_t client_random, uint32_t server_random, X509 *server_certificate, const std::vector<uint8_t> &pre_master_secret, const std::vector<uint8_t> &master_secret, const std::vector<uint8_t> &client_dh_public_key, const std::vector<uint8_t> &server_dh_public_key, BIGNUM *dh_p, BIGNUM *dh_g, const std::vector<uint8_t> &client_write_key, const std::vector<uint8_t> &server_write_key, const std::vector<uint8_t> &client_write_Iv, const std::vector<uint8_t> &server_write_Iv)
-        : chosen_tls_version_(chosen_tls_version), chosen_cipher_suite_(chosen_cipher_suite),
-          client_random_(client_random), server_random_(server_random),
-          server_certificate_(X509_dup(server_certificate)), // Duplicate the server certificate
-          pre_master_secret_(pre_master_secret), master_secret_(master_secret),
-          client_dh_public_key_(client_dh_public_key), server_dh_public_key_(server_dh_public_key),
-          dh_p_(BN_dup(dh_p)), dh_g_(BN_dup(dh_g)), // Duplicate BIGNUMs for dh_p and dh_g
-          client_write_key_(client_write_key), server_write_key_(server_write_key),
-          client_write_Iv_(client_write_Iv), server_write_Iv_(server_write_Iv)
-    {
-    }
 
     ~SSLSharedInfo()
     {
@@ -143,6 +129,7 @@ public:
 protected:
 
   Logger *logger_ = nullptr; // a pointer to a Logger object
+  EVP_PKEY *dhKeyPair = nullptr;
 };
 
 #endif // SSL_H
