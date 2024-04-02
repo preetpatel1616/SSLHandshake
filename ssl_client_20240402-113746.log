@@ -1,0 +1,39 @@
+2024-04-02 11:37:46: SslClient object created. Client Log at 20240402-113746
+2024-04-02 11:37:46: SslClient:socket_connect: Attempting to establish a TCP connection with the server.
+2024-04-02 11:37:46: SslClient:socket_connect: Successful in establishing a TCP connection with the server.
+2024-04-02 11:37:46: Handshake begins.
+
+2024-04-02 11:37:46: SslClient:handshake: Successfully sent ClientHello message.
+2024-04-02 11:37:46: SslClient:handshake: Successfully received ServerHello message.
+2024-04-02 11:37:46: SslClient:handshake: Successfully received and verified Server's certificate.
+2024-04-02 11:37:46: SslClient:handshake: Successfully received Server HelloDone message.
+2024-04-02 11:37:46: SslClient:sendKeyExchange: RSA Key Exchange sent successfully.
+2024-04-02 11:37:46: SslClient:handshake: Successfully sent RSA Key Exchange message.
+2024-04-02 11:37:46: SslClient:handshake: Successfully calculated Master Secret and Session keys.
+2024-04-02 11:37:46: SslClient:handshake: Successfully sent Finsihed message.
+2024-04-02 11:37:46: SslClient:handshake: Successfully received and verified Finished message.
+2024-04-02 11:37:46: SslClient:socket_connect: Successful in establishing an SSL connection with the server.
+
+2024-04-02 11:37:46: SSL Shared Data:
+
+2024-04-02 11:37:46: Chosen TLS version: 
+2024-04-02 11:37:46: 771
+2024-04-02 11:37:46: Chosen Cipher Suite: 
+2024-04-02 11:37:46: 47
+2024-04-02 11:37:46: Client Random: 
+2024-04-02 11:37:46: 305419896
+2024-04-02 11:37:46: Server Random: 
+2024-04-02 11:37:46: 2271560481
+2024-04-02 11:37:46: Pre-Master Secret (Hex): 0303c51fb28cac4af0b84852a897dce92856126bfe801138a45c4c6ab5d190587594b9c32f9adef1bcbd6c39dbea6a9e
+2024-04-02 11:37:46: client write key size: 
+2024-04-02 11:37:46: 16
+2024-04-02 11:37:46: server write key size: 
+2024-04-02 11:37:46: 16
+2024-04-02 11:37:46: Client write key (Hex): b8fe459f42e0e51fa81e87bbadaf6602
+2024-04-02 11:37:46: Server write key (Hex): f909d759c3f91f2173db727442a7bb13
+2024-04-02 11:37:46: 
+
+2024-04-02 11:37:46: SslClient:socket_send_string: Successful in sending the message: Client says hello
+2024-04-02 11:37:46: SslClient:socket_send_string: Current Session keys: 
+2024-04-02 11:37:46: Client write key (Hex): b8fe459f42e0e51fa81e87bbadaf6602
+2024-04-02 11:37:46: Server write key (Hex): f909d759c3f91f2173db727442a7bb13

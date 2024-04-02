@@ -126,13 +126,13 @@ void append_uint32_to_vector(std::vector<uint8_t> &vec, uint32_t value)
   vec.push_back(value & 0xFF);
 }
 
-std::string toHexString(const std::vector<uint8_t> &vec)
+std::string toHexString(const std::vector<uint8_t> &bytes)
 {
   std::stringstream ss;
-  ss << std::hex;
-  for (uint8_t byte : vec)
+  ss << std::hex << std::setfill('0');
+  for (const auto &byte : bytes)
   {
-    ss << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+    ss << std::setw(2) << static_cast<int>(byte);
   }
   return ss.str();
 }

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
-#include <iostream> 
+#include <iostream>
 
 using namespace std;
 
@@ -35,7 +35,7 @@ const uint8_t Ssl::HS_CLIENT_KEY_EXCHANGE = 0x10;
 const uint8_t Ssl::HS_FINISHED = 0x14;
 const uint8_t Ssl::HS_KEYS_REFRESH = 0x07;
 
-    // ciphersuites
+// ciphersuites
 const uint16_t Ssl::TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256 = 0x0033;
 const uint16_t Ssl::TLS_RSA_WITH_AES_128_CBC_SHA_256 = 0x002F;
 
@@ -118,10 +118,6 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
     return StatusCode::Error;
   }
 
-  // if(tcpInstance!=nullptr){
-  //   tcp_=tcpInstance;
-  // }
-
   // encrypt
   string encrypted_data;
   if (aes_encrypt(send_string, write_key, write_Iv, encrypted_data) != true)
@@ -138,17 +134,12 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
   Record send_record;
   send_record.hdr.record_type = REC_APP_DATA;
   send_record.hdr.tls_version = TLS_1_2;
-  // if (send_record.hdr.record_type == REC_APP_DATA)
-  // {
-  //   send_record.hdr.data_size = encrypted_data.size() + 1; // for null terminator
-  // }
-  // else
-    send_record.hdr.data_size = encrypted_data.size(); // and version set to VER_99
+
+  send_record.hdr.data_size = encrypted_data.size();
 
   // Allocate memory for data and copy payload into it
   send_record.data = new char[send_record.hdr.data_size];
   memcpy(send_record.data, encrypted_data.data(), send_record.hdr.data_size); // Copy the data as it is
-  // send_record.data[send_record.hdr.data_size] = '\0';        // Manually add the null terminator at the end
 
   // send
   StatusCode status = socket_send_record(send_record, tcpInstance); // calls the 'send' function that takes a 'Record' object and sends the encrypted data
@@ -160,7 +151,6 @@ StatusCode Ssl::socket_send_string(const std::string &send_string, std::vector<u
 StatusCode Ssl::socket_recv_string(std::string *recv_string, std::vector<uint8_t> write_key, std::vector<uint8_t> write_Iv, TCP *tcpInstance)
 {
 
-  logger_->log("INSIDE SSL SOCKET RECV STRING");
   if (!tcp_)
   {
     logger_->log("Ssl:socket_recv_string: Missing TCP connection.");
@@ -195,8 +185,6 @@ StatusCode Ssl::socket_recv_string(std::string *recv_string, std::vector<uint8_t
   }
   // Assign the decrypted text to the output string
   *recv_string = decrypted_data;
-
-  logger_->log("Ssl:socket_recv_string: Message received and decrypted successfully.");
   return StatusCode::Success;
 }
 
@@ -236,14 +224,11 @@ StatusCode Ssl::socket_send_record(const Record &send_record, TCP *tcpInstance)
     logger_->log("Ssl:socket_send_record:Failed to send the record.");
     return StatusCode::Error;
   }
-
-  logger_->log("Ssl:socket_send_record:Record sent successfully.");
   return StatusCode::Success;
 }
 
 StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
 {
-  logger_->log("INSIDE SSL SOCKET RECV RECORD");
   if (!tcp_)
   {
     logger_->log("Ssl:socket_recv_record: Missing TCP connection.");
@@ -255,14 +240,13 @@ StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
   }
 
   // receiving header
-  logger_->log("BEFORE RECEIVING SSL RECORD");
   char *header = (char *)malloc(5 * sizeof(char));
   if (tcpInstance->socket_recv_buffer(header, 5) != 5)
   {
     this->logger_->log("Ssl::socket_recv_record: Couldn't receive header.");
     return StatusCode::Error;
   }
-  logger_->log("AFTER RECEVIING SSL RECORD");
+
   char *record_type = header;
   char *tls_version = &(header[1]);
   char *data_size = &(header[1 + 2]);
@@ -283,8 +267,5 @@ StatusCode Ssl::socket_recv_record(Record *recv_record, TCP *tcpInstance)
   recv_record->data = received_record_buffer;
 
   free(header);
-  logger_->log("Ssl:socket_recv_record: Record received successfully.");
   return StatusCode::Success;
 }
-
-// Throughout the code, error handling is implemented using standard C++ streams (cerr) and control structures. The return values of -1 indicate an error in operations, and the use of exit(1) for unrecoverable errors causes the program to terminate immediately.

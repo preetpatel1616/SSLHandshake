@@ -1,4 +1,5 @@
 #include "SslClient.h"
+#include "SslServer.h"
 #include "crypto_adaptor.h"
 #include "../common/Logger/Logger.h"
 #include "../common/Utils/Utils.h"
@@ -161,7 +162,6 @@ StatusCode SslClient::send_hello()
   }
   this->sslSharedInfo.client_random_ = clientHello.random_;
 
-  logger_->log("SslClient:send_hello:Successfully sent ClientHello message.");
   delete[] record.data;
   record.data = nullptr;
   return StatusCode::Success;
@@ -205,7 +205,7 @@ StatusCode SslClient::receive_hello()
   serverHello.random_ = 0;
   for (int i = 0; i < 4; ++i)
   {
-    serverHello.random_ |= static_cast<uint32_t>(recv_record.data[index + i]) << ((3 - i) * 8);
+    serverHello.random_ = (serverHello.random_ << 8) | static_cast<uint8_t>(recv_record.data[index + i]);
   }
   index += sizeof(serverHello.random_);
 
@@ -214,22 +214,19 @@ StatusCode SslClient::receive_hello()
   serverHello.chosen_cipher_suite_ = static_cast<uint16_t>(recv_record.data[index] << 8) | recv_record.data[index + 1];
   index += sizeof(serverHello.chosen_cipher_suite_);
 
-  // logger_->log("SslClient:receive_hello: ServerHello Data\n");
-  // logger_->log("\nSslClient:receive_hello: Supported tls version: ");
-  // logger_->log(std::to_string(serverHello.chosen_tls_version_));
-  // logger_->log("SslClient:receive_hello: TLS 1_2: ");
-  // logger_->log(std::to_string(TLS_1_2));
-  // logger_->log("SslClient:receive_hello: Server random: ");
-  // logger_->log(std::to_string(serverHello.random_));
-  // logger_->log("SslClient:receive_hello: Supported cipher suites: ");
-  // logger_->log(std::to_string(serverHello.chosen_cipher_suite_));
+  // 2.2 deserialize client id
+  int client_id = 0; // Should be initialized to 0, not 100
+  for (int i = 0; i < 4; ++i)
+  {
+    client_id = (client_id << 8) | static_cast<uint8_t>(recv_record.data[index + i]);
+  }
+  index += sizeof(client_id);
 
   // process deserialized data
+  this->sslSharedInfo.client_id_ = client_id;
   this->sslSharedInfo.chosen_tls_version_ = serverHello.chosen_tls_version_;
   this->sslSharedInfo.chosen_cipher_suite_ = serverHello.chosen_cipher_suite_;
   this->sslSharedInfo.server_random_ = serverHello.random_;
-
-  logger_->log("SslClient:receive_hello: ServerHello message received successfully.");
   // Clean up and return success
   delete[] recv_record.data;
   recv_record.data = nullptr;
@@ -298,7 +295,6 @@ StatusCode SslClient::receive_certificate()
     return StatusCode::Error;
   }
 
-  logger_->log("SslClient:receiveCertificate: Certificate received and verified successfully.");
   X509_STORE_free(store);
   X509_STORE_CTX_free(ctx);
 
@@ -321,7 +317,7 @@ StatusCode SslClient::receive_key_exchange()
     logger_->log("SslClient:receiveKeyExchange: Received record is not a Key Exchange message.");
     return StatusCode::Error;
   }
-  logger_->log("Before checking the message type");
+
   uint8_t handshake_message_type = recv_record.data[0];
   if (handshake_message_type != HS_SERVER_KEY_EXCHANGE)
   {
@@ -414,11 +410,6 @@ StatusCode SslClient::receive_key_exchange()
       return StatusCode::Error;
     }
 
-    // // Log for debugging
-    // logger_->log("p: " + toHexString(p_vec));
-    // logger_->log("g: " + toHexString(g_vec));
-    // logger_->log("server public key: " + toHexString(server_pub_key_vec));
-
     // Determine buffer length for the shared secret
     size_t secret_len = 0;
     if (EVP_PKEY_derive(derive_ctx, nullptr, &secret_len) <= 0)
@@ -448,7 +439,6 @@ StatusCode SslClient::receive_key_exchange()
     sslSharedInfo.dh_g_ = BN_dup(g);
     // dh key pair already stored
 
-    logger_->log("SslClient:receiveKeyExchange: Key exchange processed successfully.");
     EVP_PKEY_CTX_free(derive_ctx);
     EVP_PKEY_free(server_pub_key);
     return StatusCode::Success;
@@ -479,10 +469,6 @@ StatusCode SslClient::receive_hello_done()
     logger_->log("SslClient:receiveHelloDone: Incorrect handshake message type, expected ServerHelloDone.");
     return StatusCode::Error;
   }
-
-  logger_->log("SslClient:receiveHelloDone: HelloDone message received successfully.");
-
-  // Client can now proceed with its part of the handshake, e.g., sending ClientKeyExchange, etc.
 
   return StatusCode::Success;
 }
@@ -526,7 +512,6 @@ StatusCode SslClient::send_key_exchange()
       logger_->log("SslClient:sendKeyExchange: Failed to send DHE Key Exchange.");
       return status;
     }
-    logger_->log("SslClient:sendKeyExchange: DHE Key Exchange sent successfully.");
   }
   else if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_RSA_WITH_AES_128_CBC_SHA_256)
   {
@@ -656,7 +641,6 @@ StatusCode SslClient::send_finished()
   }
 
   delete[] record.data; // Free the allocated memory
-  logger_->log("SslClient:sendFinished: Finished message sent successfully.");
   return StatusCode::Success;
 }
 
@@ -697,12 +681,16 @@ StatusCode SslClient::receive_finished()
     logger_->log("SSLClient:receiveFinished: Verification code mismatch.");
     return StatusCode::Error;
   }
-
-  logger_->log("SSLClient:receiveFinished: Finished message received and verified successfully.");
   return StatusCode::Success;
 }
 
-StatusCode SslClient::calculate_master_secret_and_session_keys()
+template <typename T>
+void secureClearVector(std::vector<T> &vec)
+{
+  std::memset(vec.data(), 0, vec.size() * sizeof(T));
+  vec.clear();
+}
+StatusCode SslClient::calculate_master_secret_and_session_keys(int i)
 {
   if (sslSharedInfo.pre_master_secret_.empty())
   {
@@ -710,48 +698,11 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
     return StatusCode::Error;
   }
 
-  // // Assuming logger_ is accessible and SSLSharedInfo instance is named sslSharedInfo for both server and client
-
-  // logger_->log("SSLSharedInfo Data\n");
-  // logger_->log("Chosen TLS version: ");
-  // logger_->log(std::to_string(sslSharedInfo.chosen_tls_version_));
-  // logger_->log("Chosen Cipher Suite: ");
-  // logger_->log(std::to_string(sslSharedInfo.chosen_cipher_suite_));
-  // logger_->log("Client Random: ");
-  // logger_->log(std::to_string(sslSharedInfo.client_random_));
-  // logger_->log("Server Random: ");
-  // logger_->log(std::to_string(sslSharedInfo.server_random_));
-
-  // // For BIGNUM values, you will need to convert them to a readable format
-  // char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
-  // char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
-  // logger_->log("DH Parameter p: ");
-  // logger_->log(dh_p_hex ? dh_p_hex : "null");
-  // logger_->log("DH Parameter g: ");
-  // logger_->log(dh_g_hex ? dh_g_hex : "null");
-
-  // // Free the allocated hex strings to prevent memory leaks
-  // if (dh_p_hex)
-  //   OPENSSL_free(dh_p_hex);
-  // if (dh_g_hex)
-  //   OPENSSL_free(dh_g_hex);
-
-  // // Pre-master secret is binary data; for logging, convert it to hex or base64
-  // std::string pre_master_secret_hex;
-  // for (uint8_t byte : sslSharedInfo.pre_master_secret_)
-  // {
-  //   char buf[3];
-  //   snprintf(buf, sizeof(buf), "%02x", byte);
-  //   pre_master_secret_hex += buf;
-  // }
-  // logger_->log("Pre-Master Secret (Hex): ");
-  // logger_->log(pre_master_secret_hex);
-
   // Step 1: Combine client and server random values
   std::vector<uint8_t> seed(8);
 
-  sslSharedInfo.client_random_ = 4294967215;
-  sslSharedInfo.server_random_ = 1938923769;
+  // sslSharedInfo.client_random_ = 2551341790;
+  // sslSharedInfo.server_random_ = 2990845779;
   std::memcpy(&seed[0], &sslSharedInfo.client_random_, sizeof(sslSharedInfo.client_random_));
   std::memcpy(&seed[4], &sslSharedInfo.server_random_, sizeof(sslSharedInfo.server_random_));
 
@@ -759,89 +710,143 @@ StatusCode SslClient::calculate_master_secret_and_session_keys()
   std::vector<uint8_t> master_secret = simplifiedPRF(sslSharedInfo.pre_master_secret_, seed, 64);
 
   sslSharedInfo.master_secret_ = master_secret;
-  // Step 3: Derive session keys (simplified)
+
+  secureClearVector(sslSharedInfo.client_write_key_);
+  secureClearVector(sslSharedInfo.server_write_key_);
+  secureClearVector(sslSharedInfo.client_write_Iv_);
+  secureClearVector(sslSharedInfo.server_write_Iv_);
+
+      // Step 3: Derive session keys (simplified)
   sslSharedInfo.client_write_key_ = std::vector<uint8_t>(master_secret.begin(), master_secret.begin() + 16);
   sslSharedInfo.server_write_key_ = std::vector<uint8_t>(master_secret.begin() + 16, master_secret.begin() + 32);
   sslSharedInfo.client_write_Iv_ = std::vector<uint8_t>(master_secret.begin() + 32, master_secret.begin() + 48);
   sslSharedInfo.server_write_Iv_ = std::vector<uint8_t>(master_secret.begin() + 48, master_secret.begin() + 64);
 
-  sslSharedInfo.client_write_Iv_ = {134, 51, 254, 53, 224, 242, 194, 188, 65, 117, 187, 46, 10, 85, 87, 167};
-  sslSharedInfo.server_write_Iv_ = {221, 161, 213, 20, 30, 206, 8, 70, 228, 102, 125, 208, 151, 1, 64, 182};
+  sslSharedInfo.client_write_Iv_ = {10, 6, 6, 113, 1, 141, 52, 207, 198, 214, 55, 139, 68, 181, 165, 195};
+  sslSharedInfo.server_write_Iv_ = {192, 58, 88, 71, 98, 5, 19, 238, 169, 196, 31, 114, 227, 172, 186, 10};
 
-  // logger_->log("client write key size: ");
-  // logger_->log(std::to_string(sslSharedInfo.client_write_Iv_.size()));
 
-  // logger_->log("server write key size: ");
-  // logger_->log(std::to_string(sslSharedInfo.server_write_Iv_.size()));
+if(i==1){
+  logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+  logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+}
+// logger_->log("SslClient:calculate_master_secret_and_session_keys: Successfully calculated new session keys.");
+  
+// logger_->log("\n");
+// if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+// {
+//   char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
+//   char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
+//   logger_->log("DH Parameter p (Hex): ");
+//   logger_->log(dh_p_hex ? dh_p_hex : "null");
+//   logger_->log("DH Parameter g (Hex): ");
+//   logger_->log(dh_g_hex ? dh_g_hex : "null");
 
-  // logger_->log("server seed: ");
-  // std::string serverSeed(seed.begin(), seed.end());
-  // logger_->log(serverSeed);
-  // logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
-  // logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+//   // Free the allocated hex strings to prevent memory leaks
+//   if (dh_p_hex)
+//     OPENSSL_free(dh_p_hex);
+//   if (dh_g_hex)
+//     OPENSSL_free(dh_g_hex);
+// }
 
-  // logger_->log("client write iv: ");
-  // std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
-  // logger_->log(clientWriteIv);
+// // Pre-master secret is binary data; for logging, convert it to hex or base64
+// std::string pre_master_secret_hex;
+// for (uint8_t byte : sslSharedInfo.pre_master_secret_)
+// {
+//   char buf[3];
+//   snprintf(buf, sizeof(buf), "%02x", byte);
+//   pre_master_secret_hex += buf;
+// }
+// logger_->log("Pre-Master Secret (Hex): " + pre_master_secret_hex);
 
-  // logger_->log("server write iv: ");
-  // std::string serverWriteIv(sslSharedInfo.server_write_Iv_.begin(), sslSharedInfo.server_write_Iv_.end());
-  // logger_->log(serverWriteIv);
+// logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+// logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
 
-  logger_->log("SSLClient: Successfully calculated master secret and derived session keys.");
-  return StatusCode::Success;
+StatusCode::Success;
 }
 
 StatusCode SslClient::handshake()
 {
+  logger_->log("Handshake begins.\n");
+
   // 1. sending ClientHello
-  logger_->log("\nSslClient:handshake: Sending clientHello.");
   StatusCode status = this->send_hello();
   if (status == StatusCode::Error)
   {
     logger_->log("SslClient:handshake:Error in sending clientHello.");
     return status;
   }
+  logger_->log("SslClient:handshake: Successfully sent ClientHello message.");
+
   // 2. receiving serverHello
-  logger_->log("SslClient:handshake:Receiving serverHello.");
   status = this->receive_hello(); // waiting for serverHello
   if (status == StatusCode::Error)
   {
     logger_->log("SslClient:handshake:Error in receiving serverHello.");
     return status;
   }
+  logger_->log("SslClient:handshake: Successfully received ServerHello message.");
 
+  // 3. receiving certificate
   status = this->receive_certificate(); // waiting for serverHello
   if (status == StatusCode::Error)
     return status;
+
+  logger_->log("SslClient:handshake: Successfully received and verified Server's certificate.");
+
+  // 4. receiving key exchange
   if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
   {
     status = this->receive_key_exchange(); // waiting for serverHello
     if (status == StatusCode::Error)
       return status;
+    logger_->log("SslClient:handshake: Successfully received DHE Key Exchange message.");
   }
 
+  // 5. receiving hello done
   status = this->receive_hello_done(); // waiting for serverHello
   if (status == StatusCode::Error)
     return status;
+
+  logger_->log("SslClient:handshake: Successfully received Server HelloDone message.");
+
+  // 6. sending key exchange
   status = this->send_key_exchange();
   if (status == StatusCode::Error)
     return status;
-  status = this->calculate_master_secret_and_session_keys();
+  if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+    logger_->log("SslClient:handshake: Successfully sent DHE Key Exchange message.");
+  }
+  else
+  {
+    logger_->log("SslClient:handshake: Successfully sent RSA Key Exchange message.");
+  }
+
+  // 7. calculating master and session keys
+  status = this->calculate_master_secret_and_session_keys(0);
+  if (status == StatusCode::Error)
+    return status;
+  logger_->log("SslClient:handshake: Successfully calculated Master Secret and Session keys.");
+
+  // 8. sending finished
+  status = this->send_finished();
   if (status == StatusCode::Error)
     return status;
 
-  status = this->send_finished(); // waiting for serverHello
+  logger_->log("SslClient:handshake: Successfully sent Finsihed message.");
+
+  // 9. receiving finished
+  status = this->receive_finished();
   if (status == StatusCode::Error)
     return status;
-  status = this->receive_finished(); // waiting for serverHello
-  if (status == StatusCode::Error)
-    return status;
+
+  logger_->log("SslClient:handshake: Successfully received and verified Finished message.");
 
   return StatusCode::Success;
 }
 
-StatusCode SslClient::send_key_refresh_request()
+StatusCode SslClient::send_refresh_key_request()
 {
   // Create the key refresh request message
   std::vector<uint8_t> requestMessage;
@@ -865,28 +870,252 @@ StatusCode SslClient::send_key_refresh_request()
   }
 
   delete[] record.data; // Free the allocated memory
+  logger_->log("\n");
   logger_->log("SslClient:send_key_refresh_request: Keys refresh request message sent successfully.");
   return StatusCode::Success;
 }
-
-void SslClient::handle_dhe()
+StatusCode SslClient::receive_refresh_key_exchange()
 {
-  this->messageCounter += 1;
+  // 1. Receive the record
+  Record recv_record;
 
-  if (this->messageCounter == this->MESSAGE_THRESHOLD)
+  StatusCode status = this->socket_recv_record(&recv_record, nullptr);
+  if (status != StatusCode::Success)
   {
-
-    StatusCode status = send_key_refresh_request();
-    status = receive_key_exchange();
-    status = send_key_exchange();
-    status = calculate_master_secret_and_session_keys();
-
-    if (status == StatusCode::Success)
-    {
-      logger_->log("SslClient:handle_dhe: Successfully refreshed session keys.");
-    }
-    this->messageCounter = 0;
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to receive Key Exchange data.");
+    return StatusCode::Error;
   }
+
+  // 2. Ensure it's a key exchange record
+  if (recv_record.hdr.record_type != REC_HANDSHAKE)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Received record is not a Key Exchange message.");
+    return StatusCode::Error;
+  }
+
+  uint8_t handshake_message_type = recv_record.data[0];
+  if (handshake_message_type != HS_KEYS_REFRESH)
+  {
+    logger_->log("SSLClient:receive_refresh_key_exchange: Incorrect handshake message type.");
+    return StatusCode::Error;
+  }
+
+  // Deserialize DHE parameters and server's public key from data
+  const unsigned char *dataPtr1 = reinterpret_cast<const unsigned char *>(recv_record.data + 1); // Skipping message type                       // Adjusting for handshake message type
+  size_t offset = 0;
+
+  // Deserialize p, g, and server's public key from data
+  std::vector<uint8_t> p_vec = readLengthPrefixedVector(dataPtr1, offset);
+  std::vector<uint8_t> g_vec = readLengthPrefixedVector(dataPtr1, offset);
+  std::vector<uint8_t> server_pub_key_der = readLengthPrefixedVector(dataPtr1, offset);
+
+  // clear_ssl_shared_info(this->sslSharedInfo);
+  // Deserialize the server's public key from DER format
+  EVP_PKEY *server_pub_key = nullptr;
+  const unsigned char *pubKeyPtr1 = server_pub_key_der.data();
+  server_pub_key = d2i_PUBKEY(nullptr, &pubKeyPtr1, server_pub_key_der.size());
+  if (!server_pub_key)
+  {
+    // If deserialization of the server's public key fails
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to deserialize server's public DH key. Data size: " + std::to_string(server_pub_key_der.size()));
+    return StatusCode::Error;
+  }
+
+  // Convert vectors back to BIGNUM*
+  BIGNUM *p = vector_to_BIGNUM(p_vec);
+  BIGNUM *g = vector_to_BIGNUM(g_vec);
+
+  // Convert BIGNUMs to OSSL_PARAM
+  OSSL_PARAM_BLD *bld = OSSL_PARAM_BLD_new();
+  OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_FFC_P, p);
+  OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_FFC_G, g);
+  OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(bld);
+
+  // Set DH parameters
+  EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);
+  if (EVP_PKEY_fromdata_init(pctx) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to initialize DH parameters.");
+    // Cleanup
+  }
+
+  EVP_PKEY *param_key = NULL;
+  if (EVP_PKEY_fromdata(pctx, &param_key, EVP_PKEY_KEY_PARAMETERS, params) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to set DH parameters.");
+    // Cleanup
+  }
+
+  // Generate the client's DH key pair
+  EVP_PKEY_CTX *keygen_ctx = EVP_PKEY_CTX_new_from_pkey(NULL, param_key, NULL);
+  if (EVP_PKEY_keygen_init(keygen_ctx) <= 0 ||
+      EVP_PKEY_keygen(keygen_ctx, &this->dhKeyPair) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to generate client's DH key pair.");
+    // Cleanup
+  }
+
+  // Setup the context for deriving the shared secret
+  EVP_PKEY_CTX *derive_ctx = EVP_PKEY_CTX_new(this->dhKeyPair, nullptr); // Use client's DH key pair
+  if (!derive_ctx)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to create context for deriving shared secret.");
+    EVP_PKEY_free(this->dhKeyPair); // Assuming dhKeyPair is the client's key pair
+    EVP_PKEY_free(server_pub_key);  // Free server's public key
+    return StatusCode::Error;
+  }
+
+  if (EVP_PKEY_derive_init(derive_ctx) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to initialize shared secret derivation.");
+    EVP_PKEY_CTX_free(derive_ctx);
+    EVP_PKEY_free(this->dhKeyPair);
+    EVP_PKEY_free(server_pub_key);
+    return StatusCode::Error;
+  }
+
+  // Set the peer's public key (server's public key) for the derivation process
+  if (EVP_PKEY_derive_set_peer(derive_ctx, server_pub_key) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Failed to set the server's public key for shared secret derivation.");
+    EVP_PKEY_CTX_free(derive_ctx);
+    EVP_PKEY_free(this->dhKeyPair);
+    EVP_PKEY_free(server_pub_key);
+    return StatusCode::Error;
+  }
+
+  // Determine buffer length for the shared secret
+  size_t secret_len = 0;
+  if (EVP_PKEY_derive(derive_ctx, nullptr, &secret_len) <= 0)
+  {
+    logger_->log("Failed to determine the length of the shared secret.");
+    EVP_PKEY_CTX_free(derive_ctx);
+    EVP_PKEY_free(this->dhKeyPair);
+    EVP_PKEY_free(server_pub_key);
+    return StatusCode::Error;
+  }
+
+  // Allocate the buffer and derive the shared secret
+  std::vector<unsigned char> shared_secret(secret_len);
+
+  if (EVP_PKEY_derive(derive_ctx, shared_secret.data(), &secret_len) <= 0)
+  {
+    logger_->log("SslClient:receive_refresh_key_exchange: Shared secret derivation failed.");
+    EVP_PKEY_CTX_free(derive_ctx);
+    EVP_PKEY_free(this->dhKeyPair);
+    EVP_PKEY_free(server_pub_key);
+    return StatusCode::Error;
+  }
+
+  // Store the shared secret
+  sslSharedInfo.pre_master_secret_.assign(shared_secret.begin(), shared_secret.end());
+  sslSharedInfo.dh_p_ = BN_dup(p); // store p
+  sslSharedInfo.dh_g_ = BN_dup(g);
+  // dh key pair already stored
+
+  EVP_PKEY_CTX_free(derive_ctx);
+  EVP_PKEY_free(server_pub_key);
+  logger_->log("SslClient:receive_refresh_key_exchange: Successfully received DHE key exchange.");
+  return StatusCode::Success;
+}
+StatusCode SslClient::send_refresh_key_exchange()
+{
+  if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+    // Serialize the public key of the client's DH key pair to DER format
+    unsigned char *pubKeyDER = nullptr; // Pointer to DER encoded public key
+    int pubKeyDERLen = i2d_PUBKEY(this->dhKeyPair, &pubKeyDER);
+    if (pubKeyDERLen <= 0)
+    {
+      logger_->log("SslClient:send_refresh_key_exchange: Failed to serialize client's DH public key to DER format.");
+      if (pubKeyDER)
+        OPENSSL_free(pubKeyDER);
+      return StatusCode::Error;
+    }
+
+    // Prepare the serialized data to include the client's DH public key
+    std::vector<uint8_t> serialized_data;
+    serialized_data.push_back(HS_KEYS_REFRESH); // Prepend the message type
+    // Append the DER-encoded public key
+    serialized_data.insert(serialized_data.end(), pubKeyDER, pubKeyDER + pubKeyDERLen);
+
+    // Free the DER-encoded public key memory
+    OPENSSL_free(pubKeyDER);
+
+    // create record
+    Record record;
+    record.hdr.record_type = REC_HANDSHAKE;
+    record.hdr.tls_version = sslSharedInfo.chosen_tls_version_; // Assuming TLS version is globally defined
+    record.hdr.data_size = serialized_data.size();
+    record.data = new char[record.hdr.data_size];
+    std::memcpy(record.data, serialized_data.data(), record.hdr.data_size);
+
+    // Send the record
+    StatusCode status = Ssl::socket_send_record(record, nullptr);
+    if (status != StatusCode::Success)
+    {
+      logger_->log("SslClient:send_refresh_key_exchange: Failed to send DHE Key Exchange.");
+      return status;
+    }
+  }
+
+  logger_->log("SslClient:send_refresh_key_exchange: Successfully sent DHE Key Exchange.");
+  logger_->log("\n");
+  return StatusCode::Success;
+}
+
+
+
+void SslClient::clear_ssl_shared_info(SSLSharedInfo &sslSharedInfo)
+{
+  // // Free the server certificate if it exists
+  // if (sslSharedInfo.server_certificate_)
+  // {
+  //   X509_free(sslSharedInfo.server_certificate_);
+  //   sslSharedInfo.server_certificate_ = nullptr;
+  // }
+
+  // // Free the DH parameters if they exist
+  // if (sslSharedInfo.dh_p_)
+  // {
+  //   BN_free(sslSharedInfo.dh_p_);
+  //   sslSharedInfo.dh_p_ = nullptr;
+  // }
+  // if (sslSharedInfo.dh_g_)
+  // {
+  //   BN_free(sslSharedInfo.dh_g_);
+  //   sslSharedInfo.dh_g_ = nullptr;
+  // }
+
+  // Securely clear vectors containing sensitive information
+  secureClearVector(sslSharedInfo.pre_master_secret_);
+  secureClearVector(sslSharedInfo.master_secret_);
+  secureClearVector(sslSharedInfo.client_write_key_);
+  secureClearVector(sslSharedInfo.server_write_key_);
+  secureClearVector(sslSharedInfo.client_write_Iv_);
+  secureClearVector(sslSharedInfo.server_write_Iv_);
+
+  this->dhKeyPair = nullptr;
+
+  // Reset other fields as necessary
+  // sslSharedInfo.client_id_ = 0;
+  // sslSharedInfo.chosen_tls_version_ = 0;
+  // sslSharedInfo.chosen_cipher_suite_ = 0;
+  // sslSharedInfo.client_random_ = 0;
+  // sslSharedInfo.server_random_ = 0;
+}
+
+bool SslClient::handle_dhe()
+{
+
+  StatusCode status = send_refresh_key_request();
+  status = receive_refresh_key_exchange();
+  status = send_refresh_key_exchange();
+  status = calculate_master_secret_and_session_keys(1);
+
+
+  return true;
+
 }
 
 StatusCode SslClient::socket_connect(const std::string &server_ip, int server_port, string key_exchange_algorithm)
@@ -904,7 +1133,7 @@ StatusCode SslClient::socket_connect(const std::string &server_ip, int server_po
     return StatusCode::Error;
   }
 
-  logger_->log("SslClient:socket_connect:Successful in establishing a TCP connection with the server.\nNow attempting to complete the SSL Handshake.");
+  logger_->log("SslClient:socket_connect: Successful in establishing a TCP connection with the server.");
   if (key_exchange_algorithm == "DHE")
   {
     this->supported_cipher_suites.push_back(TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256);
@@ -928,7 +1157,53 @@ StatusCode SslClient::socket_connect(const std::string &server_ip, int server_po
     return StatusCode::Error;
   }
 
-  logger_->log("SslClient:socket_connect:Successful in establishing an SSL connection with the server.");
+  logger_->log("SslClient:socket_connect: Successful in establishing an SSL connection with the server.\n");
+
+  // Assuming logger_ is accessible and SSLSharedInfo instance is named sslSharedInfo for both server and client
+  logger_->log("SSL Shared Data:\n");
+  logger_->log("Chosen TLS version: ");
+  logger_->log(std::to_string(sslSharedInfo.chosen_tls_version_));
+  logger_->log("Chosen Cipher Suite: ");
+  logger_->log(std::to_string(sslSharedInfo.chosen_cipher_suite_));
+  logger_->log("Client Random: ");
+  logger_->log(std::to_string(sslSharedInfo.client_random_));
+  logger_->log("Server Random: ");
+  logger_->log(std::to_string(sslSharedInfo.server_random_));
+
+  // For BIGNUM values, you will need to convert them to a readable format
+
+  if (sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
+  {
+    char *dh_p_hex = BN_bn2hex(sslSharedInfo.dh_p_);
+    char *dh_g_hex = BN_bn2hex(sslSharedInfo.dh_g_);
+    logger_->log("DH Parameter p (Hex): ");
+    logger_->log(dh_p_hex ? dh_p_hex : "null");
+    logger_->log("DH Parameter g (Hex): ");
+    logger_->log(dh_g_hex ? dh_g_hex : "null");
+  }
+
+  // Pre-master secret is binary data; for logging, convert it to hex or base64
+  std::string pre_master_secret_hex;
+  for (uint8_t byte : sslSharedInfo.pre_master_secret_)
+  {
+    char buf[3];
+    snprintf(buf, sizeof(buf), "%02x", byte);
+    pre_master_secret_hex += buf;
+  }
+  logger_->log("Pre-Master Secret (Hex): " + pre_master_secret_hex);
+
+  logger_->log("client write key size: ");
+  logger_->log(std::to_string(sslSharedInfo.client_write_Iv_.size()));
+
+  logger_->log("server write key size: ");
+  logger_->log(std::to_string(sslSharedInfo.server_write_Iv_.size()));
+
+  logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+  logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+
+  // logger_->log("client write iv (Hex): " + toHexString(sslSharedInfo.client_write_Iv_));
+  // logger_->log("server write iv (Hex): " + toHexString(sslSharedInfo.server_write_Iv_));
+
   return StatusCode::Success;
 }
 
@@ -940,10 +1215,6 @@ StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tc
   if (tcpInstance == nullptr)
   {
     status = Ssl::socket_send_string(send_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, nullptr);
-    logger_->log("SEND: Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
-    logger_->log("client write iv: ");
-    std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
-    logger_->log(clientWriteIv);
   }
   else
   {
@@ -957,12 +1228,20 @@ StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tc
   }
   else
   {
-    logger_->log("SslClient:socket_send_string:Successful in sending the message.");
+    logger_->log("\n");
+    logger_->log("SslClient:socket_send_string: Successful in sending the message: " + send_string);
+    logger_->log("SslClient:socket_send_string: Current Session keys: ");
+
+    logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+    logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+
+    // logger_->log("client write iv (Hex): " + toHexString(sslSharedInfo.client_write_Iv_));
+    // logger_->log("server write iv (Hex): " + toHexString(sslSharedInfo.server_write_Iv_));
   }
 
   if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
   {
-    handle_dhe();
+    // handle_dhe();
   }
 
   return status;
@@ -970,21 +1249,32 @@ StatusCode SslClient::socket_send_string(const std::string &send_string, TCP *tc
 StatusCode SslClient::socket_recv_string(std::string *recv_string, TCP *tcpInstance) // sends the given string of daa over the TCP connection
 {
 
-  logger_->log("INSIDE SOCKET RECV STRING");
-
   StatusCode status;
 
   if (tcpInstance == nullptr)
   {
     status = Ssl::socket_recv_string(recv_string, sslSharedInfo.server_write_key_, sslSharedInfo.server_write_Iv_, nullptr);
+    logger_->log("\n");
+    logger_->log("SslClient:socket_recv_string: Successful in receiving the message: " + *recv_string);
+    logger_->log("SslClient:socket_recv_string: Current Session keys: ");
+
+    logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+    logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+
+    // logger_->log("client write iv (Hex): " + toHexString(sslSharedInfo.client_write_Iv_));
+    // logger_->log("server write iv (Hex): " + toHexString(sslSharedInfo.server_write_Iv_));
   }
   else
   {
-    status = Ssl::socket_recv_string(recv_string, sslSharedInfo.client_write_key_, sslSharedInfo.client_write_Iv_, tcpInstance);
-    logger_->log("RECV: Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
-    logger_->log("client write iv: ");
-    std::string clientWriteIv(sslSharedInfo.client_write_Iv_.begin(), sslSharedInfo.client_write_Iv_.end());
-    logger_->log(clientWriteIv);
+    status = Ssl::socket_recv_string(recv_string, SslClient::sslSharedInfo.client_write_key_, SslClient::sslSharedInfo.client_write_Iv_, tcpInstance);
+    SslServer::logger_->log("\n");
+    SslServer::logger_->log("SslClient:socket_recv_string: Successful in receiving the message: " + *recv_string);
+    SslServer::logger_->log("SslClient:socket_recv_string: Current Session keys: ");
+
+    SslServer::logger_->log("Client write key (Hex): " + toHexString(sslSharedInfo.client_write_key_));
+    SslServer::logger_->log("Server write key (Hex): " + toHexString(sslSharedInfo.server_write_key_));
+    // SslServer::logger_->log("client write iv (Hex): " + toHexString(sslSharedInfo.client_write_Iv_));
+    // SslServer::logger_->log("server write iv (Hex): " + toHexString(sslSharedInfo.server_write_Iv_));
   }
 
   if (status != StatusCode::Success)
@@ -993,12 +1283,11 @@ StatusCode SslClient::socket_recv_string(std::string *recv_string, TCP *tcpInsta
   }
   else
   {
-    logger_->log("SslClient:socket_send:Successful in sending the message.");
   }
 
   if (this->sslSharedInfo.chosen_cipher_suite_ == TLS_DHE_RSA_WITH_AES_128_CBC_SHA_256)
   {
-    handle_dhe();
+    // handle_dhe();
   }
   return status;
 }

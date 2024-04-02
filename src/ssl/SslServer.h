@@ -21,7 +21,6 @@ public:
 
   struct SSLServerSession
   {
-    int client_id;
     std::vector<uint8_t> server_dh_private_key_; // Server's DH private key
     SslClient *sslClient;
     TCP *tcpClient;
@@ -46,9 +45,8 @@ public:
   StatusCode broadcast(const std::string &msg);
   bool server_supports(uint16_t tls_version);
 
-  void handle_dhe(int client_id);
-  StatusCode receive_key_refresh_request(int client_id);
-  
+  bool handle_dhe(int client_id);
+  void clear_ssl_shared_info(SSLSharedInfo &sslSharedInfo);
 
   // For sending and receiving raw string data (application data)
   virtual StatusCode socket_send_string(int client_id, const std::string &send_string);
@@ -63,12 +61,15 @@ public:
   StatusCode receive_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
   StatusCode receive_finished(int client_id, SSLSharedInfo &sslSharedInfo);
   StatusCode send_finished(int client_id, SSLSharedInfo &sslSharedInfo);
-  StatusCode calculate_master_secret_and_session_keys(int client_id, SSLSharedInfo &sslSharedInfo);
+  StatusCode calculate_master_secret_and_session_keys(int client_id, SSLSharedInfo &sslSharedInfo, int i);
   SslClient *handshake(int client_id);
+  StatusCode receive_refresh_key_request(int client_id);
+  StatusCode send_refresh_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
+  StatusCode receive_refresh_key_exchange(int client_id, SSLSharedInfo &sslSharedInfo, SSLServerSession &sslServerSession);
+   static Logger *logger_;
 
 private:
   bool closed_;
-  Logger* logger_;
   int client_id_;
   // SSLSharedInfo sslSharedInfo;
 
@@ -77,10 +78,6 @@ private:
   std::unordered_map<int, SSLServerSession> client_id_to_server_session_;
   std::unordered_map<int, SSLSharedInfo> client_id_to_shared_info_;
   std::vector<Ssl *> ssl_clients_;
-  
-
-
-
 };
 
 #endif // SSLSERVER_H

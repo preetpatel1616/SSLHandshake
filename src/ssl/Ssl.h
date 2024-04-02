@@ -79,6 +79,7 @@ public:
   // SSLSharedInfo structure holds shared information between client and server
   struct SSLSharedInfo
   {
+    int client_id_;
     uint16_t chosen_tls_version_;
     uint16_t chosen_cipher_suite_;
     uint32_t client_random_;
@@ -126,10 +127,11 @@ public:
   virtual StatusCode socket_send_record(const Record &send_record, TCP *tcpInstance);
   virtual StatusCode socket_recv_record(Record *recv_record, TCP *tcpInstance);
   TCP *tcp_; // a pointer to a TCP object
-  
+  EVP_PKEY *dhKeyPair = nullptr;
+
 protected:
   Logger *logger_ = nullptr; // a pointer to a Logger object
-  EVP_PKEY *dhKeyPair = nullptr;
+
 };
 
 #endif // SSL_H

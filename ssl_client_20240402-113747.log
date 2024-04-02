@@ -1,0 +1,6 @@
+2024-04-02 11:37:47: SslClient object created. Client Log at 20240402-113747
+2024-04-02 11:37:47: SslClient:socket_connect: Attempting to establish a TCP connection with the server.
+2024-04-02 11:37:47: SslClient:socket_connect: Successful in establishing a TCP connection with the server.
+2024-04-02 11:37:47: Handshake begins.
+
+2024-04-02 11:37:47: SslClient:handshake: Successfully sent ClientHello message.
