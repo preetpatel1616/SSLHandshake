@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
     std::cout << "\tc[" << c_idx << "]: connected" << std::endl;
 
-    if (ssl_client->socket_send_string("client says hello", nullptr) != StatusCode::Success)
+    if (ssl_client->socket_send_string("Client says hello", nullptr) != StatusCode::Success)
     {
         std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
         delete ssl_client;
@@ -53,13 +53,6 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "\tc[" << c_idx << "]: received '" << recv_buff << "'" << std::endl;
-
-    // if (ssl_client->socket_close() != StatusCode::Success)
-    // {
-    //   std::cerr << "\tc[" << c_idx << "]: couldn't close" << std::endl;
-    //   delete ssl_client;
-    //   return 1;
-    // }
 
     std::cout << "\tc[" << c_idx << "]: closed" << std::endl;
 

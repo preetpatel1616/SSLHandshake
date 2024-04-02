@@ -1,55 +1,19 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <iomanip>
 #include <openssl/provider.h>
 
 #include "../src/ssl/SslServer.h" // Ensure this path is correct
 #include "../src/ssl/SslClient.h" // Ensure this path is correct
 
-void handle_client(SslClient *client, SslServer* server)
+void handle_client(SslClient *client)
 {
     if (client != nullptr)
     {
-        int messageCount = 0;
-        const int refreshAfterMessages = 3;
-
-        for (int i = 0; i < refreshAfterMessages-1; ++i)
-        {
-            std::string recv_msg;
-            StatusCode code = client->socket_recv_string(&recv_msg, client->tcp_);
-            if (code != StatusCode::Success)
-            {
-                std::cerr << "Error receiving message " << i + 1 << " from client" << std::endl;
-                // Handle error (e.g., break the loop, log the error, etc.)
-                break; // Exiting the loop as we encountered an error
-            }
-            std::cout << "Server received: '" << recv_msg << "' with code: " << static_cast<int>(code) << std::endl;
-            messageCount++;
-        }
-
-        std::cout << "Server broadcasting..." << std::endl;
-        if (server->broadcast("Server says 'HELLO ALL'") != StatusCode::Success)
-        {
-            std::cerr << "Error: couldn't broadcast" << std::endl;
-        }
-
         std::string recv_msg;
         StatusCode code = client->socket_recv_string(&recv_msg, client->tcp_);
         std::cout << "Server received: '" << recv_msg << "' with code: " << static_cast<int>(code) << std::endl;
-        messageCount++;
-
-        // Check if it's time for a key refresh
-        if (messageCount == refreshAfterMessages)
-        {
-            // Initiate the key refresh process here
-            std::cout << "Initiating key refresh process for the client." << std::endl;
-            // Initiate key refresh.
-            if (!server->handle_dhe(client->sslSharedInfo.client_id_))
-            {
-                std::cerr <<"Key refresh failed" << std::endl;
-            }
-        }
+        // Add handling for sending response to client here if necessary.
     }
 }
 
@@ -84,15 +48,15 @@ int main()
             continue;
         }
         std::cout << "Server accepted client " << i + 1 << std::endl;
-        handle_client(client, server);
+        handle_client(client);
         // Consider deleting the client or properly closing its connection here
     }
 
-    // std::cout << "Server broadcasting..." << std::endl;
-    // if (server->broadcast("Server says 'HELLO ALL'") != StatusCode::Success)
-    // {
-    //     std::cerr << "Error: couldn't broadcast" << std::endl;
-    // }
+    std::cout << "Server broadcasting..." << std::endl;
+    if (server->broadcast("Server says 'HELLO ALL'") != StatusCode::Success)
+    {
+        std::cerr << "Error: couldn't broadcast" << std::endl;
+    }
 
     std::cout << "Server shutting down..." << std::endl;
     if (server->shutdown() != StatusCode::Success)

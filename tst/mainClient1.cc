@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <openssl/provider.h>
 #include "../src/ssl/SslClient.h" // Make sure this path is correct
 
 int main(int argc, char *argv[])
@@ -24,67 +23,60 @@ int main(int argc, char *argv[])
 
     addrfile >> hostname >> port;
     addrfile.close();
-    
 
     SslClient *ssl_client = new SslClient();
 
-    if (ssl_client->socket_connect(hostname, int(port), "DHE") != StatusCode::Success)
-    { // KE_DHE constant depends on your implementation
+    if (ssl_client->socket_connect(hostname, port, "DHE") != StatusCode::Success)
+    {
         std::cerr << "\tc[" << c_idx << "]: couldn't connect" << std::endl;
         delete ssl_client;
         return 1;
     }
 
-    std::cout << "\tc[" << c_idx << "]: connected" << std::endl;
+    // Send the first two messages.
+    const char *messages[] = {
+        "Client says hello",
+        "Client asks how are you?"};
+    for (int i = 0; i < 2; ++i)
+    {
+        if (ssl_client->socket_send_string(messages[i], nullptr) != StatusCode::Success)
+        {
+            std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
+            delete ssl_client;
+            return 1;
+        }
+        std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
+    }
 
-    if (ssl_client->socket_send_string("Message1 1: client says hello", nullptr) != StatusCode::Success)
+    // Wait to receive the broadcast message from the server.
+    std::string recv_broadcast;
+    if (ssl_client->socket_recv_string(&recv_broadcast, nullptr) != StatusCode::Success)
+    {
+        std::cerr << "\tc[" << c_idx << "]: couldn't receive broadcast" << std::endl;
+        delete ssl_client;
+        return 1;
+    }
+    std::cout << "\tc[" << c_idx << "]: received broadcast: '" << recv_broadcast << "'" << std::endl;
+
+    // Send the third message.
+    const char *third_message = "Client tries not to laugh";
+    if (ssl_client->socket_send_string(third_message, nullptr) != StatusCode::Success)
     {
         std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
         delete ssl_client;
         return 1;
     }
-
     std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
 
-    if (ssl_client->socket_send_string("Message 2", nullptr) != StatusCode::Success)
+    // Initiate key refresh.
+    if (!ssl_client->handle_dhe())
     {
-        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
+        std::cerr << "\tc[" << c_idx << "]: key refresh failed" << std::endl;
         delete ssl_client;
         return 1;
     }
-
-    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
-
-    if (ssl_client->socket_send_string("Message 3", nullptr) != StatusCode::Success)
-    {
-        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
-        delete ssl_client;
-        return 1;
-    }
-
-    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
-
-    if (ssl_client->socket_send_string("Message 4", nullptr) != StatusCode::Success)
-    {
-        std::cerr << "\tc[" << c_idx << "]: couldn't send" << std::endl;
-        delete ssl_client;
-        return 1;
-    }
-
-    std::cout << "\tc[" << c_idx << "]: sent" << std::endl;
-
-    std::string recv_buff;
-    if (ssl_client->socket_recv_string(&recv_buff, nullptr) != StatusCode::Success)
-    {
-        std::cerr << "\tc[" << c_idx << "]: couldn't receive" << std::endl;
-        delete ssl_client;
-        return 1;
-    }
-
-    std::cout << "\tc[" << c_idx << "]: received '" << recv_buff << "'" << std::endl;
 
     std::cout << "\tc[" << c_idx << "]: closed" << std::endl;
-
     delete ssl_client;
 
     std::cout << "\tc[" << c_idx << "]: exiting" << std::endl;
