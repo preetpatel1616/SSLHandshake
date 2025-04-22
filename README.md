@@ -1,36 +1,74 @@
-# SSL Handshake Project
+# 🛡️ TLS/SSL Handshake Simulation
 
-## Overview
-This project implements a simplified SSL/TLS handshake mechanism for secure communication over a TCP/IP network. The implementation is divided into two main directories: `SSL` and `TCP`, each containing code files that encapsulate the functionalities of their respective layers.
+This project simulates the TLS/SSL handshake process, showcasing secure communication between a client and server using both **DHE (Diffie-Hellman Ephemeral)** and **RSA** key exchange methods.
 
-## Directory Structure
+## 🔍 Overview
 
+The project demonstrates the handshake steps in a secure SSL/TLS session, including:
 
+- Client-server communication
+- Certificate verification
+- Key exchange
+- Master secret derivation
+- Secure session key generation
+- Secure broadcast messaging
 
-## SSL Directory
-The `SSL` directory contains the implementation of the SSL protocol, handling the encryption and decryption of data, managing SSL records, and performing the SSL handshake.
+It is implemented at the socket level using C/C++ and logs detailed outputs to help visualize what happens behind the scenes during a handshake.
 
-### Key Files
-- **ssl.h**: Header file declaring the `SSL` class and associated structures for SSL records.
-- **ssl.cc**: Implementation of the `SSL` class, providing methods for setting up the SSL context, sending and receiving SSL records, and managing the encryption keys.
+## ⚙️ Features
 
-## TCP Directory
-The `TCP` directory houses the low-level TCP networking code that the SSL layer uses to transmit data.
+- ✅ **TLS Version 1.2** (version code 771)
+- ✅ **Cipher Suite**: e.g., 0x0033 (DHE_RSA_WITH_AES_128_CBC_SHA)
+- 🔁 Supports:
+  - **DHE key exchange** with DH parameters `p` and `g`
+  - **RSA key exchange** using server certificate
+- 🔑 Derives:
+  - Pre-master and master secret
+  - Client/server write keys
+  - Client/server IVs (initialization vectors)
+- 🔐 Secure server broadcast after session is established
+- 👥 Supports multiple clients
 
-### Key Files
-- **tcp.h**: Header file for the `TCP` class, which offers TCP socket operations like listen, accept, connect, send, and receive.
-- **tcp.cc**: Source file with the implementation of the `TCP` class methods.
+## 🖥️ Terminal Logs & Screenshots
 
-## Getting Started
-To get started with this project, clone the repository and explore the individual components within the `SSL` and `TCP` directories. The project is structured to follow the typical phases of an SSL/TLS handshake and secure communication.
+### DHE Key Exchange
 
-### Prerequisites
-List any prerequisites for the project here, including software versions, libraries, or tools that need to be installed.
+- `dhe-client1.png` – Client 1 log
+- `dhe-client2.png` – Client 2 log
+- `dhe-server-client1.png` – Server log (client 1)
+- `dhe-server-client2.png` – Server log (client 2)
+- `dhe-terminal.png` – Terminal showing successful connection and broadcast
 
-### Building the Project
-Provide instructions for building the project, including any `make` commands or build scripts.
+### RSA Key Exchange
 
-```bash
-# Example build command
-make all
+- `rsa-client1.png` – Client 1 log
+- `rsa-client2.png` – Client 2 log
+- `rsa-server-client1.png` – Server log (client 1)
+- `rsa-server-client2.png` – Server log (client 2)
+- `rsa-terminal.png` – Terminal showing successful RSA handshake
 
+## 🔐 Handshake Steps (Simplified)
+
+1. Client sends `ClientHello`
+2. Server replies with `ServerHello` and certificate
+3. Key exchange:
+   - DHE: DH public key exchange
+   - RSA: Encrypted pre-master secret
+4. Master secret is derived
+5. Client/server session keys and IVs are generated
+6. Both send and verify `Finished` messages
+7. Secure communication begins
+
+## 🧪 Sample Output
+
+```text
+SSL Shared Data:
+Chosen TLS version: 771
+Chosen Cipher Suite: 51
+Client Random: 4294967215
+Server Random: 1983923769
+DH Parameter p (Hex): FCD8E2A2015DA3911EE217750D2D386808B7EF018803EFD1761CC427...
+DH Parameter g (Hex): 02
+Pre-Master Secret (Hex): ef611c84a42ad61b4cb3fc6ead18b73caa139e308cd0720b61d2...
+...
+Client write key (Hex): 789c5f434faf5b4285ca451e13aa26b
